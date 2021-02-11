@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>onSelectGeo example</title>
+</head>
+</head>
+<body>
+<pre id="params" style="white-space: pre;"></pre>
+<script src="external-settings.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+<script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"/>
+<div id="grid"></div>
+<script>
+    var parm = window['external-settings'];
+
+    let Get = function (url, data, callback) {
+        $.ajax
+        ({
+            url: url,
+            type: 'get',
+            data: data,
+            success: function (data) {
+                callback(data);
+            }
+        });
+    }
+
+    function returnStringIfDefined(header, value) {
+        if (typeof value === 'undefined')
+            return "";
+        return `${header} ${value}`;
+    }
+
+    window.parent.AppDispatcher.add('AppListener', {
+        onSelectGeo: function (geo) {
+            var carsInsideCurrentGeofence = [];
+            var result = [];
+            Get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
+                session: parm.Token,
+                schemaID: parm.Organization.UID,
+                finalParams: '*'
+            }, function (onlineDevices) {
+                Object.entries(onlineDevices).forEach(function (item) {
+                    if (item[1] != null) {
+                        let geofence;
+                        if (typeof item[1]['Final'].GeoFence !== 'undefined')
+                            geofence = item[1]['Final'].GeoFence;
+                        else if (typeof item[1]['Final'].GeoFence1 !== 'undefined')
+                            geofence = item[1]['Final'].GeoFence1;
+                        if (geo.ID == geofence) {
+                            carsInsideCurrentGeofence.push(item);
+                        }
+                    }
+                });
+
+                Get(`${parm.Urls.Service}/EnumDevices`, {
+                    session: parm.Token,
+                    schemaID: parm.Organization.UID
+                }, function (allDevices) {
+                    carsInsideCurrentGeofence.forEach(function (carItem) {
+                        let devicesInGeofence = allDevices.Items.filter(item => item.ID == carItem[0]);
+                        devicesInGeofence.forEach(function (device) {
+                            //var regNumber = device.Properties.find(property => property.Name == 'VehicleRegNumber');
+                            result.push(
+                                {
+                                    Vehicle: carItem[1]['Name'],
+                                    Serial: device.Serial,
+                                    Address: carItem[1].Address
+                                }
+                            );
+                        });
+                    });
+                    //вывод результатов в таблицу
+                    if (result.length > 0)
+                        $("#grid").kendoGrid({
+                            columns: [
+                                {field: "Vehicle"},
+                                {field: "Serial"},
+                                {field: "Address"}
+                            ],
+                            dataSource: result
+                        });
+                    else {
+
+                    }
+                });
+            });
+        }
+    })
+    ;
+</script>
+</body>
+</html>
