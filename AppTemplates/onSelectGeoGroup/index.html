@@ -35,70 +35,120 @@
         });
     }
 
+    function UpdateTable(dataSource)
+    {
+        if (dataSource.length > 0)
+            $("#grid").kendoGrid({
+                columns: columns,
+                dataSource: {
+                    data: dataSource,
+                    group: {field: "Geofence"}
+                },
+                groupable: false
+            });
+    }
+
+    function GetChilds(geofences, parent) {
+        let result = [];
+        let groups = [];
+        geofences.Groups.filter(a => a.ID == parent).forEach(function (childGroup) {
+            groups.push(childGroup);
+        });
+        GetChildGroups(geofences, parent).forEach(function (childGroup) {
+            groups.push(childGroup);
+        });
+        groups.forEach(function (group) {
+            GetChildItemsFromGroup(geofences, group.ID).forEach(function (childItem) {
+                result.push(childItem);
+            });
+        });
+        return result;
+    }
+
+    function GetChildGroups(geofences, parent) {
+        let result = [];
+        let groups = geofences.Groups.filter(a => a.ParentID == parent);
+        groups.forEach(function (group) {
+            result.push(group);
+            GetChildGroups(geofences, group.ID).forEach(function (childGroup) {
+                result.push(childGroup);
+            });
+        });
+        return result;
+    }
+
+    function GetChildItemsFromGroup(geofences, parent) {
+        let result = [];
+        geofences.Items.filter(a => a.ParentID == parent).forEach(function (child) {
+            result.push(child);
+        });
+        return result;
+    }
+
     window.parent.AppDispatcher.add('AppListener', {
-        onSelectGeoGroup: function (geo) {
+        onSelectGeoGroup: function (group) {
             //инициализируем пустую таблицу
             $("#grid").kendoGrid({
                 columns: columns,
                 dataSource: []
             });
-            var carsInsideCurrentGeofence = [];
 
-            //получаем список всех онлайн автомобилей
-            Get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
+            Get(`${parm.Urls.Service}/EnumGeoFences`, {
                 session: parm.Token,
-                schemaID: parm.Organization.UID,
-                finalParams: '*'
-            }, function (onlineDevices) {
-                Object.entries(onlineDevices).forEach(function (item) {
-                    if (item[1] != null) {
-                        let geofence;
-                        //проверяем наличие поля Геозона (название поля может быть произвольным)
-                        if (typeof item[1]['Final'].GeoFence !== 'undefined')
-                            geofence = item[1]['Final'].GeoFence;
-                        else if (typeof item[1]['Final'].GeoFence1 !== 'undefined')
-                            geofence = item[1]['Final'].GeoFence1;
-                        //если ID геозоны автомобиля соответствует выбранной геозоне, добавляем в массив
-                        if (geo.ID == geofence) {
-                            carsInsideCurrentGeofence.push(item);
-                        }
-                    }
-                });
+                schemaID: parm.Organization.UID
+            }, function (geofences) {
+                var result = [];
 
-                //получаем список всех устройств
-                Get(`${parm.Urls.Service}/EnumDevices`, {
+                //получаем список всех онлайн автомобилей
+                Get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
                     session: parm.Token,
-                    schemaID: parm.Organization.UID
-                }, function (allDevices) {
-                    var result = [];
-                    //для всех устройств, что находятся в нашей геозоне, берем дополнительную информацию и добавляем в результирующий массив
-                    carsInsideCurrentGeofence.forEach(function (carItem) {
-                        let devicesInGeofence = allDevices.Items.filter(item => item.ID == carItem[0]);
-                        devicesInGeofence.forEach(function (device) {
-                            let address = "";
-                            //если поле адреса не null, берем из него адрес
-                            if (!!carItem[1].Address)
-                                address = carItem[1].Address;
-                            result.push(
-                                {
-                                    Vehicle: carItem[1]['Name'],
-                                    Serial: device.Serial,
-                                    Address: address,
-                                    Geofence: undefined
+                    schemaID: parm.Organization.UID,
+                    finalParams: '*'
+                }, function (onlineDevices) {
+                    let allGeofencesInGroup = GetChilds(geofences, group.ID);
+                    allGeofencesInGroup.forEach(function (geo) {
+                        var carsInsideCurrentGeofence = [];
+                        Object.entries(onlineDevices).forEach(function (item) {
+                            if (item[1] != null) {
+                                let geofence;
+                                //проверяем наличие поля Геозона (название поля может быть произвольным)
+                                if (typeof item[1]['Final'].GeoFence !== 'undefined')
+                                    geofence = item[1]['Final'].GeoFence;
+                                else if (typeof item[1]['Final'].GeoFence1 !== 'undefined')
+                                    geofence = item[1]['Final'].GeoFence1;
+                                //если ID геозоны автомобиля соответствует выбранной геозоне, добавляем в массив
+                                if (geo.ID == geofence) {
+                                    carsInsideCurrentGeofence.push(item);
                                 }
-                            );
+                            }
+                        });
+                        //получаем список всех устройств
+                        Get(`${parm.Urls.Service}/EnumDevices`, {
+                            session: parm.Token,
+                            schemaID: parm.Organization.UID
+                        }, function (allDevices) {
+                            //для всех устройств, что находятся в нашей геозоне, берем дополнительную информацию и добавляем в результирующий массив
+                            carsInsideCurrentGeofence.forEach(function (carItem) {
+                                let devicesInGeofence = allDevices.Items.filter(item => item.ID == carItem[0]);
+                                devicesInGeofence.forEach(function (device) {
+                                    let address = "";
+                                    //если поле адреса не null, берем из него адрес
+                                    if (!!carItem[1].Address)
+                                        address = carItem[1].Address;
+                                    result.push(
+                                        {
+                                            Vehicle: carItem[1]['Name'],
+                                            Serial: device.Serial,
+                                            Address: address,
+                                            Geofence: geo.Name
+                                        }
+                                    );
+                                });
+                            });
+                            //вывод результатов в таблицу
+                            UpdateTable(result);
                         });
                     });
-                    //вывод результатов в таблицу
-                    if (result.length > 0)
-                        $("#grid").kendoGrid({
-                            columns: columns,
-                            dataSource: {
-                                data: result,
-                                group: {field: "Geofence"}
-                            },
-                            groupable: false
-                        });
                 });
             });
         }
