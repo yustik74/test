@@ -46,9 +46,15 @@
             lat2: Position.Lat + tolerance,
             lng2: Position.Lng + tolerance,
         }, function (gasStations) {
-            gasStations.forEach(function (gasStation) {
-                printGasStationInfo((gasStation));
-            });
+            if (gasStations.length>0) {
+                gasStations.forEach(function (gasStation) {
+                    printGasStationInfo((gasStation));
+                });
+            }
+            else {
+                tablesDiv.appendChild(document.createTextNode("Нет заправок поблизости!"));
+                document.body.appendChild(tablesDiv);
+            }
         });
     }
 
@@ -91,9 +97,6 @@
             tablesDiv.appendChild(headerDiv);
 
             createTable(dataSource);
-        } else {
-            tablesDiv.appendChild(document.createTextNode("Нет заправок поблизости!"));
-            document.body.appendChild(tablesDiv);
         }
     }
 
