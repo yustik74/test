@@ -3,6 +3,16 @@
 <head>
     <meta charset="utf-8"/>
     <title>onSelectCar example</title>
+    <style>
+
+        div.tableHeader {
+            font-size: 120%; /* Размер шрифта в процентах */
+            font-family: serif; /* Шрифт с засечками */
+            position: relative; /* Относительное позиционирование */
+            top: 15px; /* Сдвиг сверху */
+            padding-bottom: 25px;
+        }
+    </style>
 </head>
 </head>
 <body>
@@ -46,31 +56,29 @@
             lat2: Position.Lat + tolerance,
             lng2: Position.Lng + tolerance,
         }, function (gasStations) {
-            if (gasStations.length>0) {
+            if (gasStations.length > 0) {
                 gasStations.forEach(function (gasStation) {
                     printGasStationInfo((gasStation));
                 });
-            }
-            else {
+            } else {
                 tablesDiv.appendChild(document.createTextNode("Нет заправок поблизости!"));
                 document.body.appendChild(tablesDiv);
             }
         });
     }
 
-    function propName(prop, value) {
-        for (var i in prop) {
-            if (prop[i] == value) {
-                return i;
+    function propName(properties, value) {
+        for (var counter in properties) {
+            if (properties[counter] == value) {
+                return counter;
             }
         }
         return false;
     }
 
     function checkIsFuel(propertyName) {
-        if (propertyName == 'Address' || propertyName == 'Type')
-            return false;
-        return true;
+        if (!!propertyName)
+            return (propertyName == 'Address' || propertyName == 'Type') ? false : true;
     }
 
     function printGasStationInfo(gasStation) {
@@ -87,17 +95,48 @@
                 );
         });
         if (dataSource.length > 0) {
+            var tableHeaderDivName = `view${divCounter}`;
+
             var headerDiv = document.createElement('div');
-            var headerName = "Наименование: " + gasStation.ID;
-            var coordsName = "Координаты: lat " + gasStation.Lat + " lng " + gasStation.Lng;
-            headerDiv.appendChild(document.createTextNode(headerName));
+            headerDiv.setAttribute("class", "tableHeader");
+            headerDiv.setAttribute("id", tableHeaderDivName);
+
+            var headerName = document.createElement('span');
+            headerName.setAttribute("data-format","standart");
+            headerName.setAttribute("data-bind", "text: headerName")
+
+            var headerCoords = document.createElement('span');
+            headerCoords.setAttribute("data-format","standart");
+            headerCoords.setAttribute("data-bind", "text: headerCoords")
+
+            headerDiv.appendChild(headerName);
             headerDiv.appendChild(document.createElement("br"));
-            headerDiv.appendChild(document.createTextNode(coordsName));
-            headerDiv.appendChild(document.createElement("br"));
+            headerDiv.appendChild(headerCoords);
+            var viewModel = kendo.observable({
+                headerName: "Наименование: " + gasStation.ID,
+                headerCoords: "Координаты: lat " + gasStation.Lat + " lng " + gasStation.Lng
+            });
             tablesDiv.appendChild(headerDiv);
+            document.body.appendChild(tablesDiv);
+            kendo.bind($(`#${tableHeaderDivName}`), viewModel);
+            //var headerName = "Наименование: " + gasStation.ID;
+            //var coordsName = "Координаты: lat " + gasStation.Lat + " lng " + gasStation.Lng;
+            // headerDiv.appendChild(document.createTextNode(headerName));
+            // headerDiv.appendChild(document.createElement("br"));
+            // headerDiv.appendChild(document.createTextNode(coordsName));
+            // headerDiv.appendChild(document.createElement("br"));
+            //tablesDiv.appendChild(headerDiv);
 
             createTable(dataSource);
         }
+    }
+
+    function createSpan(fieldName)
+    {
+        var spanElement = document.createElement('span');
+        spanElement.setAttribute("data-format","standart");
+        spanElement.setAttribute("data-bind", `text: ${fieldName}`);
+        return spanElement;
     }
 
     function createTable(dataSource) {
@@ -121,6 +160,7 @@
     window.parent.AppDispatcher.add('CarListener', {
         onSelectCar: function (car) {
             tablesDiv.innerHTML = '';
+            divCounter = 0;
             //получаем список всех онлайн устройств, чтобы выдернуть последнюю координату выбранного устройства
             get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
                 session: parm.Token,
