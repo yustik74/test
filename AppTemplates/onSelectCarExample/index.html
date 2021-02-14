@@ -8,9 +8,11 @@
         div.tableHeader {
             font-size: 120%; /* Размер шрифта в процентах */
             font-family: serif; /* Шрифт с засечками */
-            position: relative; /* Относительное позиционирование */
-            top: 15px; /* Сдвиг сверху */
-            padding-bottom: 25px;
+            color: #656565;
+        }
+        div.tableEntry
+        {
+            padding-bottom: 45px;
         }
     </style>
 </head>
@@ -25,15 +27,13 @@
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
-    var tablesDiv = document.createElement('div');
-    tablesDiv.setAttribute("id", `tablesDiv`);
 
     var columns = [
         {field: "fuelType", title: "Тип топлива"},
         {field: "price", title: "Стоимость"}
     ];
 
-    var tolerance = 0.1561 //радиус 10км
+    var tolerance = 0.1561 //удаление до угла квадрата поиска 5км
     var divCounter = 0;
 
     let get = function (url, data, callback) {
@@ -48,7 +48,8 @@
         });
     }
 
-    function getGasStations(Position) {
+    function printClosestGasStations(Position) {
+        //получаем список объектов в квадрате 10х10км
         get(`/ESGeo/Load/${parm.Organization.ID}`, {
             service: "GasStations",
             lat1: Position.Lat - tolerance,
@@ -61,13 +62,13 @@
                     printGasStationInfo((gasStation));
                 });
             } else {
-                tablesDiv.appendChild(document.createTextNode("Нет заправок поблизости!"));
-                document.body.appendChild(tablesDiv);
+                document.body.appendChild(document.createTextNode("Нет заправок поблизости!"));
             }
         });
     }
 
-    function propName(properties, value) {
+    //получить имя свойства
+    function getPropertyName(properties, value) {
         for (var counter in properties) {
             if (properties[counter] == value) {
                 return counter;
@@ -76,6 +77,7 @@
         return false;
     }
 
+    //исключаем поле адреса или названия объекта
     function checkIsFuel(propertyName) {
         if (!!propertyName)
             return (propertyName == 'Address' || propertyName == 'Type') ? false : true;
@@ -84,8 +86,9 @@
     function printGasStationInfo(gasStation) {
 
         var dataSource = [];
-        var props = Object.entries(gasStation.Props);
-        props.forEach(function (property) {
+        var properties = Object.entries(gasStation.Props);
+        //пробегаемся по всем свойствам и исключаем адреса и названия точек
+        properties.forEach(function (property) {
             if (checkIsFuel(property[0]))
                 dataSource.push(
                     {
@@ -97,18 +100,18 @@
         if (dataSource.length > 0) {
             var tableHeaderDivName = `view${divCounter}`;
 
+            //создаем div для записи объекта
+            var tableEntryDiv = document.createElement('div');
+            tableEntryDiv.setAttribute("id", `tableEntry${divCounter}`);
+            tableEntryDiv.setAttribute("class", "tableEntry");
+            //добавляем заголовочный div
             var headerDiv = document.createElement('div');
             headerDiv.setAttribute("class", "tableHeader");
             headerDiv.setAttribute("id", tableHeaderDivName);
 
-            var headerName = document.createElement('span');
-            headerName.setAttribute("data-format","standart");
-            headerName.setAttribute("data-bind", "text: headerName")
-
-            var headerCoords = document.createElement('span');
-            headerCoords.setAttribute("data-format","standart");
-            headerCoords.setAttribute("data-bind", "text: headerCoords")
-
+            //добавляем и заполняем поля в заголовок
+            var headerName = createSpan("headerName");
+            var headerCoords = createSpan("headerCoords");
             headerDiv.appendChild(headerName);
             headerDiv.appendChild(document.createElement("br"));
             headerDiv.appendChild(headerCoords);
@@ -116,21 +119,15 @@
                 headerName: "Наименование: " + gasStation.ID,
                 headerCoords: "Координаты: lat " + gasStation.Lat + " lng " + gasStation.Lng
             });
-            tablesDiv.appendChild(headerDiv);
-            document.body.appendChild(tablesDiv);
+            tableEntryDiv.appendChild(headerDiv);
+            //добавляем таблицу с ценами на топливо
+            appendTableToDiv(tableEntryDiv, dataSource);
+            document.body.appendChild(tableEntryDiv);
             kendo.bind($(`#${tableHeaderDivName}`), viewModel);
-            //var headerName = "Наименование: " + gasStation.ID;
-            //var coordsName = "Координаты: lat " + gasStation.Lat + " lng " + gasStation.Lng;
-            // headerDiv.appendChild(document.createTextNode(headerName));
-            // headerDiv.appendChild(document.createElement("br"));
-            // headerDiv.appendChild(document.createTextNode(coordsName));
-            // headerDiv.appendChild(document.createElement("br"));
-            //tablesDiv.appendChild(headerDiv);
-
-            createTable(dataSource);
         }
     }
 
+    //конструктор span для kendo
     function createSpan(fieldName)
     {
         var spanElement = document.createElement('span');
@@ -139,16 +136,16 @@
         return spanElement;
     }
 
-    function createTable(dataSource) {
-
+    //создаем, заполняем таблицу и добавляем ее в родительский div
+    function appendTableToDiv(divSource, dataSource) {
+        let tableName = `tab${divCounter}`;
         var newDiv = document.createElement('div');
-        newDiv.setAttribute("id", `tab${divCounter}`);
+        newDiv.setAttribute("id", tableName);
         newDiv.appendChild(document.createElement("br"));
-        tablesDiv.appendChild(newDiv);
-        document.body.appendChild(tablesDiv);
-
+        divSource.appendChild(newDiv);
+        document.body.appendChild(divSource);
         if (dataSource.length > 0)
-            $(`#tab${divCounter}`).kendoGrid({
+            $(`#${tableName}`).kendoGrid({
                 columns: columns,
                 dataSource: {
                     data: dataSource
@@ -159,9 +156,8 @@
 
     window.parent.AppDispatcher.add('CarListener', {
         onSelectCar: function (car) {
-            tablesDiv.innerHTML = '';
             divCounter = 0;
-            //получаем список всех онлайн устройств, чтобы выдернуть последнюю координату выбранного устройства
+            //получаем список всех онлайн устройств, чтобы выдернуть последнюю координату выбранного устройства и запустить поиск заправок поблизости
             get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
@@ -169,7 +165,7 @@
             }, function (onlineDevices) {
                 Object.entries(onlineDevices).forEach(function (device) {
                     if (device[0] == car.ID)
-                        getGasStations(device[1].LastPosition);
+                        printClosestGasStations(device[1].LastPosition);
                 });
             });
         }
