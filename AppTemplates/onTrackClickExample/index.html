@@ -23,21 +23,21 @@
     var hostUrl = "dark-sky.p.rapidapi.com";
 
     var columns1 = [
-        {field: "temperature", title: "Температура, °C"},
-        {field: "apparentTemperature", title: "По ощущению, °C"},
-        {field: "dewPoint", title: "Точка росы, °C"},
-        {field: "humidity", title: "Влажность, %"},
-        {field: "precipProbability", title: "Вероятность осадков, %"},
+        {field: "temperature", title: "Температура"},
+        {field: "apparentTemperature", title: "По ощущению"},
+        {field: "dewPoint", title: "Точка росы"},
+        {field: "humidity", title: "Влажность"},
+        {field: "precipProbability", title: "Вероятность осадков"},
         {field: "precipType", title: "Тип осадков"},
         {field: "summary", title: "Итог"},
     ];
 
     var columns2 = [
-        {field: "pressure", title: "Давление, Pa"},
-        {field: "visibility", title: "Видимость, км"},
+        {field: "pressure", title: "Давление"},
+        {field: "visibility", title: "Видимость"},
         {field: "windBearing", title: "Направление ветра"},
-        {field: "windGust", title: "Скорость ветра, м/c"},
-        {field: "windSpeed", title: "Порывы ветра, м/c"}
+        {field: "windGust", title: "Скорость ветра"},
+        {field: "windSpeed", title: "Порывы ветра"}
     ];
 
     function updateTable(table, inputColumns, dataSource) {
@@ -54,11 +54,11 @@
     function createDataSource1(input)
     {
         var dataSource = new Object();
-        dataSource.temperature = input.temperature;
-        dataSource.apparentTemperature = input.apparentTemperature;
-        dataSource.dewPoint = input.dewPoint;
-        dataSource.humidity = input.humidity;
-        dataSource.precipProbability = input.precipProbability;
+        dataSource.temperature = input.temperature + " °C";
+        dataSource.apparentTemperature = input.apparentTemperature + " °C";
+        dataSource.dewPoint = input.dewPoint + " °C";
+        dataSource.humidity = input.humidity + "%";
+        dataSource.precipProbability = input.precipProbability + "%";
         dataSource.precipType = input.precipType;
         dataSource.summary = input.summary;
         return [dataSource];
@@ -68,11 +68,11 @@
     function createDataSource2(input)
     {
         var dataSource = new Object();
-        dataSource.pressure = input.pressure;
-        dataSource.visibility = input.visibility;
-        dataSource.windBearing = input.windBearing;
-        dataSource.windGust = input.windGust;
-        dataSource.windSpeed = input.windSpeed;
+        dataSource.pressure = input.pressure + " Pa";
+        dataSource.visibility = input.visibility + " км";
+        dataSource.windBearing = input.windBearing + "°";
+        dataSource.windGust = input.windGust + " м/с";
+        dataSource.windSpeed = input.windSpeed + " м/с";
         return [dataSource];
     }
 
