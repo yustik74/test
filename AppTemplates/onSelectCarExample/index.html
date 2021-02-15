@@ -35,6 +35,7 @@
 
     var tolerance = 0.1561 //удаление до угла квадрата поиска 5км
     var divCounter = 0;
+    var infoDiv = document.createTextNode("");
 
     let get = function (url, data, callback) {
         $.ajax
@@ -62,7 +63,8 @@
                     printGasStationInfo((gasStation));
                 });
             } else {
-                document.body.appendChild(document.createTextNode("Нет заправок поблизости!"));
+                infoDiv.textContent = "Не найдено заправок поблизости!";
+                document.body.appendChild(infoDiv);
             }
         });
     }
@@ -144,6 +146,12 @@
         newDiv.appendChild(document.createElement("br"));
         divSource.appendChild(newDiv);
         document.body.appendChild(divSource);
+        updateTable(tableName, dataSource);
+        divCounter++;
+    }
+
+    function updateTable(tableName, dataSource)
+    {
         if (dataSource.length > 0)
             $(`#${tableName}`).kendoGrid({
                 columns: columns,
@@ -151,11 +159,22 @@
                     data: dataSource
                 }
             });
-        divCounter++;
+    }
+
+    function removeTables(maxCounter)
+    {
+        for (var counter = 0; counter < maxCounter; counter++)
+        {
+            document.getElementById(`tableEntry${counter}`).remove();
+        }
     }
 
     window.parent.AppDispatcher.add('CarListener', {
         onSelectCar: function (car) {
+            infoDiv.textContent = "";
+            document.body.appendChild(infoDiv);
+            removeTables(divCounter);
+
             divCounter = 0;
             //получаем список всех онлайн устройств, чтобы выдернуть последнюю координату выбранного устройства и запустить поиск заправок поблизости
             get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
