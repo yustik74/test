@@ -85,7 +85,7 @@
         return `${date.getUTCFullYear()}-${twoDigitMonth}-${twoDigitDate}T${twoDigitHours}:${twoDigitMinutes}:${twoDigitSeconds}`;
     }
 
-    window.parent.AppDispatcher.add('CarListener', {
+    window.parent.AppDispatcher.add('TrackClickListener', {
         onTrackClick: function (car, point, angle, pntIndex, timePos, dist, info) {
             console.info('onTrackClick', {
                 car: car,
