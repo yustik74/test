@@ -11,33 +11,26 @@
 </head>
 <body>
 <pre id="params" style="white-space: pre;"></pre>
-
 <div id="grid1"></div>
-<div id="grid2"></div>
 <script>
-    //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
+    //в external-settings хранятся настройки текущей сессии
     var parm = window['external-settings'];
-    //токен для API сервиса https://rapidapi.com/darkskyapis/api/dark-sky
-    var rapidApiToken = "a99ed6ea3cmshe42862c83561be7p114f6djsn5291a66ef649";
+
     //API URL
-    var hostUrl = "dark-sky.p.rapidapi.com";
+    var hostUrl = "api.openweathermap.org/data/2.5/onecall/timemachine?";
 
     var columns1 = [
-        {field: "temperature", title: "Температура"},
-        {field: "apparentTemperature", title: "По ощущению"},
-        {field: "dewPoint", title: "Точка росы"},
+        {field: "temp", title: "Температура"},
+        {field: "feels_like", title: "По ощущению"},
+        {field: "dew_point", title: "Точка росы"},
         {field: "humidity", title: "Влажность"},
-        {field: "precipProbability", title: "Вероятность осадков"},
-        {field: "precipType", title: "Тип осадков"},
-        {field: "summary", title: "Итог"},
-    ];
-
-    var columns2 = [
+        {field: "clouds", title: "Облачность"},
+        {field: "state ", title: "Состояние"},
+        {field: "intensity ", title: "Интенсивность"},
         {field: "pressure", title: "Давление"},
         {field: "visibility", title: "Видимость"},
-        {field: "windBearing", title: "Направление ветра"},
-        {field: "windGust", title: "Скорость ветра"},
-        {field: "windSpeed", title: "Порывы ветра"}
+        {field: "wind_deg", title: "Направление ветра"},
+        {field: "wind_speed", title: "Скорость ветра"}
     ];
 
     function updateTable(table, inputColumns, dataSource) {
@@ -50,39 +43,31 @@
             });
     }
 
-    //подготовка первой части данных для kendo
-    function createDataSource1(input)
-    {
+    //подготовка данных для kendo
+    function createDataSource(input) {
         var dataSource = new Object();
-        dataSource.temperature = input.temperature + " °C";
-        dataSource.apparentTemperature = input.apparentTemperature + " °C";
-        dataSource.dewPoint = input.dewPoint + " °C";
+        dataSource.temp = input.temp + " °C";
+        dataSource.feels_like = input.feels_like + " °C";
+        dataSource.dew_point = input.dew_point + " °C";
         dataSource.humidity = input.humidity + "%";
-        dataSource.precipProbability = input.precipProbability + "%";
-        dataSource.precipType = input.precipType;
-        dataSource.summary = input.summary;
+        dataSource.pressure = input.pressure + " Па";
+        if (!!dataSource.visibility)
+            dataSource.visibility = input.visibility + "м";
+        dataSource.wind_deg = input.wind_deg + "°";
+        dataSource.wind_speed = input.wind_speed + "м/с";
+        dataSource.clouds = input.clouds + "%";
+        //если в массиве погоды есть объекты, из первого берем состояние (снег, облачность, дождь и т.д.) и из свойства с таким же именем берем интенсивность
+        if (input.weather.length > 0) {
+            dataSource.state = input.weather[0].description;
+            //проверяем наличие свойства, равного состоянию погоды, если есть - берем из него интенсивность
+            if (input.weather[0].main != "Clouds" && !!input[input.weather[0].main.toLowerCase()])
+                dataSource.intensity = input[input.weather[0].main.toLowerCase()]['1h'] * 100 + "%";
+        }
+        for (var key in dataSource) {
+            if (!!!dataSource[key])
+                dataSource[key] = "";
+        }
         return [dataSource];
-    }
-
-    //подготовка второй части данных для kendo
-    function createDataSource2(input)
-    {
-        var dataSource = new Object();
-        dataSource.pressure = input.pressure + " Pa";
-        dataSource.visibility = input.visibility + " км";
-        dataSource.windBearing = input.windBearing + "°";
-        dataSource.windGust = input.windGust + " м/с";
-        dataSource.windSpeed = input.windSpeed + " м/с";
-        return [dataSource];
-    }
-
-    function formatDateUtcForDarkSkyApi(date) {
-        var twoDigitMonth = ((date.getUTCMonth() + 1) >= 10) ? (date.getUTCMonth() + 1) : '0' + (date.getUTCMonth() + 1);
-        var twoDigitDate = ((date.getUTCDate()) >= 10) ? (date.getUTCDate()) : '0' + (date.getUTCDate());
-        var twoDigitHours = ((date.getUTCHours()) >= 10) ? (date.getUTCHours()) : '0' + (date.getUTCHours());
-        var twoDigitMinutes = ((date.getUTCMinutes()) >= 10) ? (date.getUTCMinutes()) : '0' + (date.getUTCMinutes());
-        var twoDigitSeconds = ((date.getUTCSeconds()) >= 10) ? (date.getUTCSeconds()) : '0' + (date.getUTCSeconds());
-        return `${date.getUTCFullYear()}-${twoDigitMonth}-${twoDigitDate}T${twoDigitHours}:${twoDigitMinutes}:${twoDigitSeconds}`;
     }
 
     window.parent.AppDispatcher.add('TrackClickListener', {
@@ -98,29 +83,22 @@
             });
             //инициализируем пустые таблицы
             updateTable("grid1", columns1, []);
-            updateTable("grid2", columns2, []);
-
+            var utcUnixTime = info.dt.getTime() / 1000;
             //подготовка настроек для get-запроса сервису, в point находятся координаты точки, в info.dt время
+            //для запросов к погодному сервису нужно зарегистрироваться в сервисе https://openweathermap.org/price с планом Free и получить токен для доступа,
+            // токен добавляется в "Переменные для приложения" в настройках App с названием key, скриншот в файле token.png
             const settings = {
                 "async": true,
                 "crossDomain": true,
-                "url": `https://${hostUrl}/${point.lat},${point.lng},${formatDateUtcForDarkSkyApi(info.dt)}Z?lang=ru`,
-                "method": "GET",
-                "headers": {
-                    "x-rapidapi-key": rapidApiToken,
-                    "x-rapidapi-host": hostUrl
-                }
+                "url": `https://${hostUrl}lat=${point.lat}&lon=${point.lng}&appid=${parm.Settings['key']}&dt=${utcUnixTime}&lang=ru&units=metric`,
+                "method": "GET"
             };
 
             $.ajax(settings).done(function (response) {
                 console.log(response);
-                //в currently находится погода из истории на запрошенный момент времени
-                var dataSource = response.currently;
-                dataSource.humidity *= 100;
-                dataSource.precipProbability *= 100;
-                //делим параметры на две таблицы и заполняем их
-                updateTable("grid1", columns1, createDataSource1(dataSource));
-                updateTable("grid2", columns2, createDataSource2(dataSource));
+                //в current находится погода из истории на запрошенный момент времени
+                var dataSource = response.current;
+                updateTable("grid1", columns1, createDataSource(dataSource));
             });
         }
     });
