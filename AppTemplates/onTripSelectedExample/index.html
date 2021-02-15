@@ -70,13 +70,15 @@
                 tripSplitterIndex: 0
             }, function (trips) {
                 var dataSource = [];
-                dataSource.push(    {
-                    Name: trips[car.ID].Name,
-                    Serial: trips[car.ID].Serial,
-                    OverspeedCount: trips[car.ID].Total.OverspeedCount,
-                    MaxSpeed: trips[car.ID].Total.MaxSpeed
-                });
-                updateTable("grid1", columns1, dataSource);
+                dataSource.push(    );
+                updateTable("grid1", columns1, [
+                    {
+                        Name: trips[car.ID].Name,
+                        Serial: trips[car.ID].Serial,
+                        OverspeedCount: trips[car.ID].Total.OverspeedCount,
+                        MaxSpeed: trips[car.ID].Total.MaxSpeed
+                    }
+                ]);
             });
         }
     });
