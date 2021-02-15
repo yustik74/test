@@ -4,53 +4,76 @@
     <meta charset="utf-8"/>
     <title>onSelectCar example</title>
 </head>
-    <script src="external-settings.js"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
-    <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<script src="external-settings.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+<script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
 </head>
 <body>
 <pre id="params" style="white-space: pre;"></pre>
 
-<div id="grid"></div>
+<div id="grid1"></div>
+<div id="grid2"></div>
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
+    //токен для API сервиса https://rapidapi.com/darkskyapis/api/dark-sky
     var rapidApiToken = "a99ed6ea3cmshe42862c83561be7p114f6djsn5291a66ef649";
+    //API URL
+    var hostUrl = "dark-sky.p.rapidapi.com";
 
-    var columns = [
-        {field: "Vehicle", label: "Автомобиль"},
-        {field: "Serial", label: "Серийный номер устройства"},
-        {field: "TotalMH", label: "Моточасы"},
-        {field: "TotalKM", label: "Пробег"}
+    var columns1 = [
+        {field: "temperature", title: "Температура, °C"},
+        {field: "apparentTemperature", title: "По ощущению, °C"},
+        {field: "dewPoint", title: "Точка росы, °C"},
+        {field: "humidity", title: "Влажность, %"},
+        {field: "precipProbability", title: "Вероятность осадков, %"},
+        {field: "precipType", title: "Тип осадков"},
+        {field: "summary", title: "Итог"},
     ];
 
-    let get = function (url, data, callback) {
-        $.ajax
-        ({
-            url: url,
-            type: 'get',
-            data: data,
-            success: function (data) {
-                callback(data);
-            }
-        });
-    }
+    var columns2 = [
+        {field: "pressure", title: "Давление, Pa"},
+        {field: "visibility", title: "Видимость, км"},
+        {field: "windBearing", title: "Направление ветра"},
+        {field: "windGust", title: "Скорость ветра, м/c"},
+        {field: "windSpeed", title: "Порывы ветра, м/c"}
+    ];
 
-    function updateTable(dataSource) {
+    function updateTable(table, inputColumns, dataSource) {
         if (dataSource.length > 0)
-            $("#grid").kendoGrid({
-                columns: columns,
+            $(`#${table}`).kendoGrid({
+                columns: inputColumns,
                 dataSource: {
                     data: dataSource
                 }
             });
     }
 
-    function formatDate(date) {
-        var twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
-        var twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
-        return `${date.getFullYear()}${twoDigitMonth}${twoDigitDate}-${date.getHours}${date.getMinutes()}`;
+    //подготовка первой части данных для kendo
+    function createDataSource1(input)
+    {
+        var dataSource = new Object();
+        dataSource.temperature = input.temperature;
+        dataSource.apparentTemperature = input.apparentTemperature;
+        dataSource.dewPoint = input.dewPoint;
+        dataSource.humidity = input.humidity;
+        dataSource.precipProbability = input.precipProbability;
+        dataSource.precipType = input.precipType;
+        dataSource.summary = input.summary;
+        return [dataSource];
+    }
+
+    //подготовка второй части данных для kendo
+    function createDataSource2(input)
+    {
+        var dataSource = new Object();
+        dataSource.pressure = input.pressure;
+        dataSource.visibility = input.visibility;
+        dataSource.windBearing = input.windBearing;
+        dataSource.windGust = input.windGust;
+        dataSource.windSpeed = input.windSpeed;
+        return [dataSource];
     }
 
     function formatDateUtcForDarkSkyApi(date) {
@@ -64,23 +87,40 @@
 
     window.parent.AppDispatcher.add('CarListener', {
         onTrackClick: function (car, point, angle, pntIndex, timePos, dist, info) {
-            console.info('onTrackClick', {car: car, point: point, angle: angle, pntIndex: pntIndex, timePos: timePos, dist: dist, info: info});
-            //инициализируем пустую таблицу
-            updateTable([]);
+            console.info('onTrackClick', {
+                car: car,
+                point: point,
+                angle: angle,
+                pntIndex: pntIndex,
+                timePos: timePos,
+                dist: dist,
+                info: info
+            });
+            //инициализируем пустые таблицы
+            updateTable("grid1", columns1, []);
+            updateTable("grid2", columns2, []);
 
+            //подготовка настроек для get-запроса сервису, в point находятся координаты точки, в info.dt время
             const settings = {
                 "async": true,
                 "crossDomain": true,
-                "url": `https://dark-sky.p.rapidapi.com/${point.lat},${point.lng},${formatDateUtcForDarkSkyApi(info.dt)}Z?lang=ru`,
+                "url": `https://${hostUrl}/${point.lat},${point.lng},${formatDateUtcForDarkSkyApi(info.dt)}Z?lang=ru`,
                 "method": "GET",
                 "headers": {
                     "x-rapidapi-key": rapidApiToken,
-                    "x-rapidapi-host": "dark-sky.p.rapidapi.com"
+                    "x-rapidapi-host": hostUrl
                 }
             };
 
             $.ajax(settings).done(function (response) {
                 console.log(response);
+                //в currently находится погода из истории на запрошенный момент времени
+                var dataSource = response.currently;
+                dataSource.humidity *= 100;
+                dataSource.precipProbability *= 100;
+                //делим параметры на две таблицы и заполняем их
+                updateTable("grid1", columns1, createDataSource1(dataSource));
+                updateTable("grid2", columns2, createDataSource2(dataSource));
             });
         }
     });
