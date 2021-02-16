@@ -22,17 +22,37 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
 <div id="grid"></div>
+<div id="map" style="width: 100%; height: 600px"></div>
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
     var infoDiv = document.createTextNode("");
 
     var columns = [
-        {field: "CalculatedDistance", title: "Рассчетное расстояние"},
+        {field: "CalculatedDistance", title: "Рассчетное расстояние Graphhopper"},
         {field: "TotalDistance", title: "Фактическое расстояние"}
     ];
+
+    var mymap = L.map('map').setView([55.172589, 61.406295], 10);
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        maxZoom: 18,
+        attribution: 'Map data &copy;OpenStreetMap contributors, ' +
+            'Imagery ©Mapbox',
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1
+    }).addTo(mymap);
+    var marker;
 
     let get = function (url, data, callback) {
         $.ajax
@@ -40,30 +60,11 @@
             url: url,
             type: 'get',
             data: data,
+            traditional: true,
             success: function (data) {
                 callback(data);
             }
         });
-    }
-
-    //конструктор span для kendo
-    function createSpan(fieldName) {
-        var spanElement = document.createElement('span');
-        spanElement.setAttribute("data-format", "standart");
-        spanElement.setAttribute("data-bind", `text: ${fieldName}`);
-        return spanElement;
-    }
-
-    //создаем, заполняем таблицу и добавляем ее в родительский div
-    function appendTableToDiv(divSource, dataSource) {
-        let tableName = `tab${divCounter}`;
-        var newDiv = document.createElement('div');
-        newDiv.setAttribute("id", tableName);
-        newDiv.appendChild(document.createElement("br"));
-        divSource.appendChild(newDiv);
-        document.body.appendChild(divSource);
-        updateTable(tableName, dataSource);
-        divCounter++;
     }
 
     function updateTable(tableName, dataSource) {
@@ -90,27 +91,19 @@
         return `${date.getFullYear()}${twoDigitMonth}${twoDigitDate}-${twoDigitHours}${twoDigitMinutes}`;
     }
 
-    function printInfo() {
-
+    function pointToParameterFormat(point) {
+        return `${point.Lat},${point.Lng}`;
     }
 
-    function joinPoints(points) {
-        if (points.length > 0) {
-            var result = `${points[0].Lat},${points[0].Lng}`;
-            for (var counter = 1; counter < points.length; counter++) {
-                result += `&point=${points[counter].Lat},${points[counter].Lng}`;
-            }
-            return result;
-        }
-        return null;
+    function drawTrack(latlngs, color = 'red', popup) {
+        var polyline = L.polyline(latlngs, {color: color}).addTo(mymap);
+        polyline.bindPopup(popup);
     }
 
     window.parent.AppDispatcher.add('routeComparerListener', {
         onTripSelected: function (car, tripIndex, sd, ed) {
             infoDiv.textContent = "";
             document.body.appendChild(infoDiv);
-            //removeTables(divCounter);
-            divCounter = 0;
 
             get(`${parm.Urls.Service}/GetTrips`, {
                 session: parm.Token,
@@ -121,28 +114,47 @@
                 tripSplitterIndex: 0
             }, function (trips) {
                 var currentTrip = Object.entries(trips[car.ID].Trips)[tripIndex];
-                var points = [
-                    {
-                        Lat: currentTrip[1].PointStart.Lat,
-                        Lng: currentTrip[1].PointStart.Lng
-                    },
-                    {
-                        Lat: currentTrip[1].PointEnd.Lat,
-                        Lng: currentTrip[1].PointEnd.Lng
+                mymap.setView([currentTrip[1].PointEnd.Lat, currentTrip[1].PointEnd.Lng], 9);
+                marker = L.marker([currentTrip[1].PointEnd.Lat, currentTrip[1].PointEnd.Lng]).addTo(mymap);
+                marker.bindPopup(`${car.Name}`).openPopup();
+
+                get(`${parm.Urls.Service}/GetTrack`, {
+                    session: parm.Token,
+                    schemaID: parm.Organization.UID,
+                    IDs: car.ID,
+                    sd: dateToApiFormat(sd),
+                    ed: dateToApiFormat(ed),
+                    tripSplitterIndex: 0
+                }, function (track) {
+                    var latlngs = [];
+                    for (var counter = 0; counter < track[car.ID][0].DT.length; counter++) {
+                        latlngs.push([track[car.ID][0].Lat[counter], track[car.ID][0].Lng[counter]]);
                     }
-                ];
-                var url = `https://graphhopper.com/api/1/route?point=${currentTrip[1].PointStart.Lat},${currentTrip[1].PointStart.Lng}&point=${currentTrip[1].PointEnd.Lat},${currentTrip[1].PointEnd.Lng}&vehicle=car&debug=true&key=a8d5882e-f57d-4822-861c-b0b846d75269&type=json&points_encoded=false&locale=ru&instructions=false`;
-                //https://graphhopper.com/api/1/route?point=55.1871802,61.3307691&point=55.1806810,61.3686633&vehicle=car&debug=true&key=a8d5882e-f57d-4822-861c-b0b846d75269&type=json&points_encoded=false&locale=ru&instructions=false
-//                get(`${parm.Settings['graphhopper_url']}/route`, {
-                get(`${url}`, null
-                , function (route) {
-                    updateTable('grid',[
-                        {
-                            CalculatedDistance: route.paths[0].distance / 1000,
-                            TotalDistance: currentTrip[1].Total.TotalDistance
-                        }
-                        ]
-                    );
+                    drawTrack(latlngs, "red", "Фактический трек");
+
+                    get(`${parm.Settings['graphhopper_url']}/route`, {
+                        key: parm.Settings['graphhopper_api_key'],
+                        vehicle: 'car',
+                        type: 'json',
+                        point: [pointToParameterFormat(currentTrip[1].PointStart), pointToParameterFormat(currentTrip[1].PointEnd)],
+                        points_encoded: 'false',
+                        locale: 'ru',
+                        instructions: 'false'
+                    }, function (route) {
+                        updateTable('grid', [
+                                {
+                                    CalculatedDistance: route.paths[0].distance / 1000,
+                                    TotalDistance: currentTrip[1].Total.TotalDistance
+                                }
+                            ]
+                        );
+                        var latlngs_calc = [];
+                        route.paths[0].points.coordinates.forEach(function (point) {
+                                latlngs_calc.push([point[1], point[0]]);
+                            }
+                        );
+                        drawTrack(latlngs_calc, "green", "Рассчетный трек");
+                    });
                 });
             });
         }
