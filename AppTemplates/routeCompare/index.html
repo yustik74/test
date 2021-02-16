@@ -23,6 +23,7 @@
 <script src="web.js"></script>
 <script src="graphhopper.js"></script>
 <script src="googleApi.js"></script>
+<script src="autoGraphApi.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
@@ -52,28 +53,24 @@
     ];
 
     updateTable('grid', [{
-        CalculatedDistanceGraphhopper: '',
+        CalculatedDistance: '',
         TotalDistance: ''
     }
     ]);
 
     var apiHandlersList = [];
-    apiHandlersList.push(new GraphhopperApi(parm));
-    apiHandlersList.push(new GoogleApi(parm));
-
-    var apiList = [];
-    apiHandlersList.forEach(function (handler) {
-        apiList.push(handler.getName);
-    });
+    var apiNamesList = [];
+    initApiLists();
 
     $("#selectRouteService").kendoDropDownList({
-        dataSource: apiList
+        dataSource: apiNamesList
     });
     var dropdownlist = $("#selectRouteService").data("kendoDropDownList");
     dropdownlist.bind("change", updateCalculatedRoute);
 
     var mymap = L.map('map').setView([55.172589, 61.406295], 10);
     var mapObjectsLayer = L.layerGroup().addTo(mymap);
+    var calculatedRouteLayer = L.layerGroup().addTo(mymap);
 
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
         maxZoom: 18,
@@ -83,6 +80,16 @@
         tileSize: 512,
         zoomOffset: -1
     }).addTo(mymap);
+
+    function initApiLists() {
+        apiHandlersList.push(new GraphhopperApi(parm));
+        apiHandlersList.push(new GoogleApi(parm));
+        apiHandlersList.push(new AutoGraphApi(parm));
+
+        apiHandlersList.forEach(function (handler) {
+            apiNamesList.push(handler.getName);
+        });
+    }
 
     function createSelect(values) {
         var selectServiceDiv = document.getElementById('selectRouteService');
@@ -130,13 +137,14 @@
         return point.Lat + ',' + point.Lng;
     }
 
-    function drawTrack(latlngs, color = 'red', popup) {
-        let polyline = L.polyline(latlngs, {color: color}).addTo(mapObjectsLayer);
+    function drawTrack(latlngs, color = 'red', popup, layer = mapObjectsLayer) {
+        let polyline = L.polyline(latlngs, {color: color}).addTo(layer);
         polyline.bindPopup(popup);
     }
 
     function clearMapLayers() {
         mapObjectsLayer.clearLayers();
+        calculatedRouteLayer.clearLayers();
     }
 
     function setDeviceMarker(point, deviceInfo) {
@@ -145,16 +153,17 @@
         marker.bindPopup(deviceInfo).openPopup();
     }
 
-    function getRouteFromApiHandler(startPoint, endPoint) {
-        var result = apiHandlersList[dropdownlist.select()].getRoute(startPoint, endPoint);
-        feelCalculatedRouteResult(result);
+    function updateRouteFromApiHandler(startPoint, endPoint) {
+        apiHandlersList[dropdownlist.select()].getRoute(startPoint, endPoint).then(function (result) {
+            feelCalculatedRouteResult(result);
+        });
     }
 
     function feelCalculatedRouteResult(route) {
         updateTable('grid', [
                 {
-                    CalculatedDistanceGraphhopper: route.TotalDistance + ' км',
-                    TotalDistance: totalDistance + ' км'
+                    CalculatedDistance: route.totalDistance + ' км',
+                    TotalDistance: currentTrack.currentTrip.Total.TotalDistance + ' км'
                 }
             ]
         );
@@ -164,7 +173,6 @@
     function updateRoute() {
         infoDiv.textContent = '';
         document.body.appendChild(infoDiv);
-        clearMapLayers();
 
         get(parm.Urls.Service + '/GetTrips', {
             session: parm.Token,
@@ -190,24 +198,29 @@
                     latlngs.push([track[currentTrack.car.ID][0].Lat[counter], track[currentTrack.car.ID][0].Lng[counter]]);
                 }
                 drawTrack(latlngs, 'red', 'Фактический трек');
-                totalDistance = round(currentTrack.currentTrip.Total.TotalDistance);
+                currentTrack.currentTrip.Total.TotalDistance = round(currentTrack.currentTrip.Total.TotalDistance);
                 updateCalculatedRoute();
             });
         });
     }
 
-    function updateCalculatedRoute()
-    {
-        getRouteFromApiHandler(currentTrack.currentTrip.PointStart, currentTrack.currentTrip.PointEnd);
+    function updateCalculatedRoute() {
+        calculatedRouteLayer.clearLayers();
+        updateRouteFromApiHandler(currentTrack.currentTrip.PointStart, currentTrack.currentTrip.PointEnd, calculatedRouteLayer);
     }
 
     window.parent.AppDispatcher.add('routeComparerListener', {
         onTripSelected: function (inCar, inTripIndex, inSd, inEd) {
+            clearMapLayers();
             currentTrack.sd = inSd;
             currentTrack.car = inCar;
             currentTrack.ed = inEd;
             updateRoute();
-        }
+        },
+
+        onSelectCar: function (car) {
+            clearMapLayers();
+        },
     });
 
 </script>
