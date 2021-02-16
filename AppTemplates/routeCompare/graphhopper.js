@@ -24,7 +24,7 @@ class GraphhopperApi {
                         result.points.push([point[1], point[0]]);
                     }
                 );
-                return result;
+                resolve(result);
             });
         });
     };
