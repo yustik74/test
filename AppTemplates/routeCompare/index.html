@@ -70,7 +70,7 @@
         dataSource: apiList
     });
     var dropdownlist = $("#selectRouteService").data("kendoDropDownList");
-    //dropdownlist.select(1);
+    dropdownlist.bind("change", updateCalculatedRoute);
 
     var mymap = L.map('map').setView([55.172589, 61.406295], 10);
     var mapObjectsLayer = L.layerGroup().addTo(mymap);
