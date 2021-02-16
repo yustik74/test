@@ -20,6 +20,9 @@
 <body>
 <pre id="params" style="white-space: pre;"></pre>
 <script src="external-settings.js"></script>
+<script src="web.js"></script>
+<script src="graphhopper.js"></script>
+<script src="googleApi.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
@@ -53,8 +56,16 @@
         TotalDistance: ''
     }
     ]);
-    var apiList = ['Google API', 'Graphhopper API'];
-    //createSelect(['Graphhopper API', 'Google API']);
+
+    var apiHandlersList = [];
+    apiHandlersList.push(new GoogleApi(parm));
+    apiHandlersList.push(new GraphhopperApi(parm));
+
+    var apiList = [];
+    apiHandlersList.forEach(function (handler) {
+        apiList.push(handler.getName);
+    });
+
     $("#selectRouteService").kendoDropDownList({
         dataSource: apiList
     });
@@ -72,19 +83,6 @@
         tileSize: 512,
         zoomOffset: -1
     }).addTo(mymap);
-
-    let get = function (url, data, callback) {
-        $.ajax
-        ({
-            url: url,
-            type: 'get',
-            data: data,
-            traditional: true,
-            success: function (data) {
-                callback(data);
-            }
-        });
-    }
 
     function createSelect(values) {
         var selectServiceDiv = document.getElementById('selectRouteService');
@@ -147,25 +145,9 @@
         marker.bindPopup(deviceInfo).openPopup();
     }
 
-    function getRouteFromGraphhopper(startPoint, endPoint) {
-        get(parm.Settings['graphhopper_url'] + '/route', {
-            key: parm.Settings['graphhopper_api_key'],
-            vehicle: 'car',
-            type: 'json',
-            point: [pointToParameterFormat(startPoint), pointToParameterFormat(endPoint)],
-            points_encoded: 'false',
-            locale: 'ru',
-            instructions: 'false'
-        }, function (route) {
-            var result = Object();
-            result.totalDistance = round(route.paths[0].distance / 1000);
-            result.points = [];
-            route.paths[0].points.coordinates.forEach(function (point) {
-                    result.points.push([point[1], point[0]]);
-                }
-            );
-            feelCalculatedRouteResult(result);
-        });
+    function getRouteFromApiHandler(startPoint, endPoint) {
+        var result = apiHandlersList[dropdownlist.select()].getRoute(startPoint, endPoint);
+        feelCalculatedRouteResult(result);
     }
 
     function feelCalculatedRouteResult(route) {
@@ -177,6 +159,11 @@
             ]
         );
         drawTrack(route.points, 'green', 'Рассчетный трек');
+    }
+
+    function getCurrentHandler()
+    {
+        return apiHandlersList[dropdownlist.select()];
     }
 
     function updateRoute() {
@@ -209,7 +196,7 @@
                 }
                 drawTrack(latlngs, 'red', 'Фактический трек');
                 totalDistance = round(currentTrip[1].Total.TotalDistance);
-                getRouteFromGraphhopper(currentTrip[1].PointStart, currentTrip[1].PointEnd);
+                getRouteFromApiHandler(currentTrip[1].PointStart, currentTrip[1].PointEnd);
             });
         });
     }
