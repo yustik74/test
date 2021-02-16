@@ -1,4 +1,4 @@
-class AutoGraphApi {
+class AutoGraphGoogleApi {
 
     constructor(parm) {
         this.parm = parm;

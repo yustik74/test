@@ -84,7 +84,7 @@
     function initApiLists() {
         apiHandlersList.push(new GraphhopperApi(parm));
         apiHandlersList.push(new GoogleApi(parm));
-        apiHandlersList.push(new AutoGraphApi(parm));
+        apiHandlersList.push(new AutoGraphGoogleApi(parm));
 
         apiHandlersList.forEach(function (handler) {
             apiNamesList.push(handler.getName);
