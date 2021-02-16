@@ -44,7 +44,7 @@
     var sd;
     var ed;
     var totalDistance;
-
+    var currentTrack = Object();
 
     var columns = [
         {field: 'CalculatedDistanceGraphhopper', title: 'Рассчетное расстояние Graphhopper'},
@@ -58,8 +58,8 @@
     ]);
 
     var apiHandlersList = [];
-    apiHandlersList.push(new GoogleApi(parm));
     apiHandlersList.push(new GraphhopperApi(parm));
+    apiHandlersList.push(new GoogleApi(parm));
 
     var apiList = [];
     apiHandlersList.forEach(function (handler) {
@@ -70,7 +70,7 @@
         dataSource: apiList
     });
     var dropdownlist = $("#selectRouteService").data("kendoDropDownList");
-    dropdownlist.select(1);
+    //dropdownlist.select(1);
 
     var mymap = L.map('map').setView([55.172589, 61.406295], 10);
     var mapObjectsLayer = L.layerGroup().addTo(mymap);
@@ -161,11 +161,6 @@
         drawTrack(route.points, 'green', 'Рассчетный трек');
     }
 
-    function getCurrentHandler()
-    {
-        return apiHandlersList[dropdownlist.select()];
-    }
-
     function updateRoute() {
         infoDiv.textContent = '';
         document.body.appendChild(infoDiv);
@@ -174,38 +169,43 @@
         get(parm.Urls.Service + '/GetTrips', {
             session: parm.Token,
             schemaID: parm.Organization.UID,
-            IDs: car.ID,
-            sd: dateToApiFormat(sd),
-            ed: dateToApiFormat(ed),
+            IDs: currentTrack.car.ID,
+            sd: dateToApiFormat(currentTrack.sd),
+            ed: dateToApiFormat(currentTrack.ed),
             tripSplitterIndex: 0
         }, function (trips) {
-            var currentTrip = Object.entries(trips[car.ID].Trips)[0];
+            currentTrack.currentTrip = Object.entries(trips[currentTrack.car.ID].Trips)[0][1];
 
-            setDeviceMarker(currentTrip[1].PointEnd, car.Name);
+            setDeviceMarker(currentTrack.currentTrip.PointEnd, currentTrack.car.Name);
             get(parm.Urls.Service + '/GetTrack', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
-                IDs: car.ID,
-                sd: dateToApiFormat(sd),
-                ed: dateToApiFormat(ed),
+                IDs: currentTrack.car.ID,
+                sd: dateToApiFormat(currentTrack.sd),
+                ed: dateToApiFormat(currentTrack.ed),
                 tripSplitterIndex: 0
             }, function (track) {
                 var latlngs = [];
-                for (var counter = 0; counter < track[car.ID][0].DT.length; counter++) {
-                    latlngs.push([track[car.ID][0].Lat[counter], track[car.ID][0].Lng[counter]]);
+                for (var counter = 0; counter < track[currentTrack.car.ID][0].DT.length; counter++) {
+                    latlngs.push([track[currentTrack.car.ID][0].Lat[counter], track[currentTrack.car.ID][0].Lng[counter]]);
                 }
                 drawTrack(latlngs, 'red', 'Фактический трек');
-                totalDistance = round(currentTrip[1].Total.TotalDistance);
-                getRouteFromApiHandler(currentTrip[1].PointStart, currentTrip[1].PointEnd);
+                totalDistance = round(currentTrack.currentTrip.Total.TotalDistance);
+                updateCalculatedRoute();
             });
         });
     }
 
+    function updateCalculatedRoute()
+    {
+        getRouteFromApiHandler(currentTrack.currentTrip.PointStart, currentTrack.currentTrip.PointEnd);
+    }
+
     window.parent.AppDispatcher.add('routeComparerListener', {
         onTripSelected: function (inCar, inTripIndex, inSd, inEd) {
-            sd = inSd;
-            car = inCar;
-            ed = inEd;
+            currentTrack.sd = inSd;
+            currentTrack.car = inCar;
+            currentTrack.ed = inEd;
             updateRoute();
         }
     });
