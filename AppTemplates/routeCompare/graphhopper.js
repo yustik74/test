@@ -1,3 +1,6 @@
+/*
+    параметры graphhopper_url и graphhopper_api_key задаются в свойствах App, пример приложен в файле screen.png
+ */
 class GraphhopperApi {
 
     constructor(parm) {
