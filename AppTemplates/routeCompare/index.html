@@ -24,8 +24,10 @@
 <script src="graphhopper.js"></script>
 <script src="googleApi.js"></script>
 <script src="autoGraphApi.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
+
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
 />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -40,11 +42,6 @@
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
-    var infoDiv = document.createTextNode('');
-    var car;
-    var sd;
-    var ed;
-    var totalDistance;
     var currentTrack = Object();
 
     var columns = [
@@ -58,37 +55,46 @@
     }
     ]);
 
-    var apiHandlersList = [];
-    var apiNamesList = [];
-    initApiLists();
+    var apiList = initApiLists();
 
     $("#selectRouteService").kendoDropDownList({
-        dataSource: apiNamesList
+        dataSource: apiList.apiNamesList
     });
     var dropdownlist = $("#selectRouteService").data("kendoDropDownList");
     dropdownlist.bind("change", updateCalculatedRoute);
 
-    var mymap = L.map('map').setView([55.172589, 61.406295], 10);
-    var mapObjectsLayer = L.layerGroup().addTo(mymap);
-    var calculatedRouteLayer = L.layerGroup().addTo(mymap);
+    var mapObjects = initMap();
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-        maxZoom: 18,
-        attribution: 'Map data &copy;OpenStreetMap contributors, ' +
-            'Imagery ©Mapbox',
-        id: 'mapbox/streets-v11',
-        tileSize: 512,
-        zoomOffset: -1
-    }).addTo(mymap);
+    function initMap()
+    {
+        var result = Object();
+        result.map = L.map('map').setView([55.172589, 61.406295], 10);
+        result.mapObjectsLayer = L.layerGroup().addTo(result.map);
+        result.calculatedRouteLayer = L.layerGroup().addTo(result.map);
+
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+            maxZoom: 18,
+            attribution: 'Map data &copy;OpenStreetMap contributors, ' +
+                'Imagery ©Mapbox',
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1
+        }).addTo(result.map);
+        return result;
+    }
 
     function initApiLists() {
-        apiHandlersList.push(new GraphhopperApi(parm));
-        apiHandlersList.push(new GoogleApi(parm));
-        apiHandlersList.push(new AutoGraphGoogleApi(parm));
+        var result = Object;
+        result.apiHandlersList = [];
+        result.apiNamesList = [];
+        result.apiHandlersList.push(new GraphhopperApi(parm));
+        result.apiHandlersList.push(new GoogleApi(parm));
+        result.apiHandlersList.push(new AutoGraphGoogleApi(parm));
 
-        apiHandlersList.forEach(function (handler) {
-            apiNamesList.push(handler.getName);
+        result.apiHandlersList.forEach(function (handler) {
+            result.apiNamesList.push(handler.getName);
         });
+        return result;
     }
 
     function createSelect(values) {
@@ -137,24 +143,24 @@
         return point.Lat + ',' + point.Lng;
     }
 
-    function drawTrack(latlngs, color = 'red', popup, layer = mapObjectsLayer) {
+    function drawTrack(latlngs, color = 'red', popup, layer = mapObjects.mapObjectsLayer) {
         let polyline = L.polyline(latlngs, {color: color}).addTo(layer);
         polyline.bindPopup(popup);
     }
 
     function clearMapLayers() {
-        mapObjectsLayer.clearLayers();
-        calculatedRouteLayer.clearLayers();
+        mapObjects.mapObjectsLayer.clearLayers();
+        mapObjects.calculatedRouteLayer.clearLayers();
     }
 
     function setDeviceMarker(point, deviceInfo) {
-        mymap.setView([point.Lat, point.Lng], 9);
-        var marker = L.marker([point.Lat, point.Lng]).addTo(mapObjectsLayer);
+        mapObjects.map.setView([point.Lat, point.Lng], 9);
+        var marker = L.marker([point.Lat, point.Lng]).addTo(mapObjects.mapObjectsLayer);
         marker.bindPopup(deviceInfo).openPopup();
     }
 
     function updateRouteFromApiHandler(startPoint, endPoint) {
-        apiHandlersList[dropdownlist.select()].getRoute(startPoint, endPoint).then(function (result) {
+        apiList.apiHandlersList[dropdownlist.select()].getRoute(startPoint, endPoint).then(function (result) {
             feelCalculatedRouteResult(result);
         });
     }
@@ -171,9 +177,6 @@
     }
 
     function updateRoute() {
-        infoDiv.textContent = '';
-        document.body.appendChild(infoDiv);
-
         get(parm.Urls.Service + '/GetTrips', {
             session: parm.Token,
             schemaID: parm.Organization.UID,
@@ -193,32 +196,40 @@
                 ed: dateToApiFormat(currentTrack.ed),
                 tripSplitterIndex: 0
             }, function (track) {
-                var latlngs = [];
-                for (var counter = 0; counter < track[currentTrack.car.ID][0].DT.length; counter++) {
-                    latlngs.push([track[currentTrack.car.ID][0].Lat[counter], track[currentTrack.car.ID][0].Lng[counter]]);
-                }
-                drawTrack(latlngs, 'red', 'Фактический трек');
+                let points = getPointsFromTrack(currentTrack.car.ID, track);
+                drawTrack(points, 'red', 'Фактический трек');
                 currentTrack.currentTrip.Total.TotalDistance = round(currentTrack.currentTrip.Total.TotalDistance);
                 updateCalculatedRoute();
             });
         });
     }
 
+    function getPointsFromTrack(carId, track)
+    {
+        let points = [];
+        for (let counter = 0; counter < track[carId][0].DT.length; counter++) {
+            points.push([track[carId][0].Lat[counter], track[carId][0].Lng[counter]]);
+        }
+        return points;
+    }
+
     function updateCalculatedRoute() {
-        calculatedRouteLayer.clearLayers();
-        updateRouteFromApiHandler(currentTrack.currentTrip.PointStart, currentTrack.currentTrip.PointEnd, calculatedRouteLayer);
+        mapObjects.calculatedRouteLayer.clearLayers();
+        if (!!currentTrack)
+            updateRouteFromApiHandler(currentTrack.currentTrip.PointStart, currentTrack.currentTrip.PointEnd, mapObjects.calculatedRouteLayer);
     }
 
     window.parent.AppDispatcher.add('routeComparerListener', {
         onTripSelected: function (inCar, inTripIndex, inSd, inEd) {
             clearMapLayers();
-            currentTrack.sd = inSd;
+            currentTrack.sd = moment(inSd).utc().toDate();
+            currentTrack.ed = moment(inEd).utc().toDate();
             currentTrack.car = inCar;
-            currentTrack.ed = inEd;
             updateRoute();
         },
 
         onSelectCar: function (car) {
+            currentTrack = Object();
             clearMapLayers();
         },
     });
