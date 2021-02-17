@@ -8,12 +8,14 @@ function clearMapLayers() {
     mapObject.calculatedRouteLayer.clearLayers();
 }
 
+//установка маркера на карту leaflet
 function setDeviceMarker(point, deviceInfo) {
     mapObject.map.setView([point.Lat, point.Lng], 9);
     var marker = L.marker([point.Lat, point.Lng]).addTo(mapObject.mapObjectsLayer);
     marker.bindPopup(deviceInfo).openPopup();
 }
 
+//инициализация карты leaflet со слоями для маршрутов и маркера
 function initMap(mapId)
 {
     let result = Object();

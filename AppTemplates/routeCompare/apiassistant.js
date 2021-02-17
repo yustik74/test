@@ -11,6 +11,7 @@ function initApiLists() {
     return result;
 }
 
+//метод округления
 function round(value, digits = 2) {
     var multiplier = 1;
     for (var counter = 0; counter < digits; counter++)
@@ -18,6 +19,7 @@ function round(value, digits = 2) {
     return Math.round((value) * multiplier) / multiplier;
 }
 
+//перевод UTC-даты в формат строки для API
 function dateToUtcApiFormat(date) {
     var twoDigitMonth = ((date.getUTCMonth() + 1) >= 10) ? (date.getUTCMonth() + 1) : '0' + (date.getUTCMonth() + 1);
     var twoDigitDate = ((date.getUTCDate()) >= 10) ? (date.getUTCDate()) : '0' + (date.getUTCDate());
@@ -26,6 +28,7 @@ function dateToUtcApiFormat(date) {
     return date.getUTCFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes;
 }
 
+//перевод даты в формат строки для API
 function dateToApiFormat(date) {
     var twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
     var twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
@@ -38,6 +41,7 @@ function pointToParameterFormat(point) {
     return point.Lat + ',' + point.Lng;
 }
 
+//получение массива точек трека из объекта трека, полученного по GetTrack
 function getPointsFromTrack(carId, track)
 {
     let points = [];

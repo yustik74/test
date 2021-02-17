@@ -1,5 +1,4 @@
-
-
+//создание html-объекта выпадающего списка по массиву значений
 function createSelect(values) {
     var selectServiceDiv = document.getElementById('selectRouteService');
     var newSelect = document.createElement('select');
@@ -32,9 +31,3 @@ var columns = [
     {field: 'CalculatedDistance', title: 'Рассчетное расстояние'},
     {field: 'TotalDistance', title: 'Фактическое расстояние'}
 ];
-
-updateTable('grid', [{
-    CalculatedDistance: '',
-    TotalDistance: ''
-}
-]);
