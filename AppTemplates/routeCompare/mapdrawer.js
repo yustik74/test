@@ -1,0 +1,33 @@
+function drawTrack(latlngs, color = 'red', popup, layer = mapObjects.mapObjectsLayer) {
+    let polyline = L.polyline(latlngs, {color: color}).addTo(layer);
+    polyline.bindPopup(popup);
+}
+
+function clearMapLayers() {
+    mapObjects.mapObjectsLayer.clearLayers();
+    mapObjects.calculatedRouteLayer.clearLayers();
+}
+
+function setDeviceMarker(point, deviceInfo) {
+    mapObjects.map.setView([point.Lat, point.Lng], 9);
+    var marker = L.marker([point.Lat, point.Lng]).addTo(mapObjects.mapObjectsLayer);
+    marker.bindPopup(deviceInfo).openPopup();
+}
+
+function initMap(mapId)
+{
+    var result = Object();
+    result.map = L.map(mapId).setView([55.172589, 61.406295], 10);
+    result.mapObjectsLayer = L.layerGroup().addTo(result.map);
+    result.calculatedRouteLayer = L.layerGroup().addTo(result.map);
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        maxZoom: 18,
+        attribution: 'Map data &copy;OpenStreetMap contributors, ' +
+            'Imagery ©Mapbox',
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1
+    }).addTo(result.map);
+    return result;
+}
