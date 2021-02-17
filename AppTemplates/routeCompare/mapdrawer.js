@@ -1,22 +1,22 @@
-function drawTrack(latlngs, color = 'red', popup, layer = mapObjects.mapObjectsLayer) {
+function drawTrack(latlngs, color = 'red', popup, layer = mapObject.mapObjectsLayer) {
     let polyline = L.polyline(latlngs, {color: color}).addTo(layer);
     polyline.bindPopup(popup);
 }
 
 function clearMapLayers() {
-    mapObjects.mapObjectsLayer.clearLayers();
-    mapObjects.calculatedRouteLayer.clearLayers();
+    mapObject.mapObjectsLayer.clearLayers();
+    mapObject.calculatedRouteLayer.clearLayers();
 }
 
 function setDeviceMarker(point, deviceInfo) {
-    mapObjects.map.setView([point.Lat, point.Lng], 9);
-    var marker = L.marker([point.Lat, point.Lng]).addTo(mapObjects.mapObjectsLayer);
+    mapObject.map.setView([point.Lat, point.Lng], 9);
+    var marker = L.marker([point.Lat, point.Lng]).addTo(mapObject.mapObjectsLayer);
     marker.bindPopup(deviceInfo).openPopup();
 }
 
 function initMap(mapId)
 {
-    var result = Object();
+    let result = Object();
     result.map = L.map(mapId).setView([55.172589, 61.406295], 10);
     result.mapObjectsLayer = L.layerGroup().addTo(result.map);
     result.calculatedRouteLayer = L.layerGroup().addTo(result.map);

@@ -1,5 +1,5 @@
 function initApiLists() {
-    var result = Object;
+    let result = Object;
     result.apiHandlersList = [];
     result.apiNamesList = [];
     result.apiHandlersList.push(new GraphhopperApi(parm));
@@ -24,6 +24,14 @@ function dateToUtcApiFormat(date) {
     var twoDigitHours = ((date.getUTCHours()) >= 10) ? (date.getUTCHours()) : '0' + (date.getUTCHours());
     var twoDigitMinutes = ((date.getUTCMinutes()) >= 10) ? (date.getUTCMinutes()) : '0' + (date.getUTCMinutes());
     return date.getUTCFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes;
+}
+
+function dateToApiFormat(date) {
+    var twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
+    var twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
+    var twoDigitHours = ((date.getHours()) >= 10) ? (date.getHours()) : '0' + (date.getHours());
+    var twoDigitMinutes = ((date.getMinutes()) >= 10) ? (date.getMinutes()) : '0' + (date.getMinutes());
+    return date.getFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes;
 }
 
 function pointToParameterFormat(point) {
