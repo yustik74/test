@@ -29,7 +29,7 @@
 
     var stagesList = [
         {stageName: 'Motion'},
-        {stageName: 'GeoFence*'},
+        {stageName: 'GeoFence'},
         {stageName: 'Daylight'},
         {stageName: 'Power'},
         {stageName: 'Overspeed'}
@@ -54,6 +54,7 @@
     }
 
     function drawKendoTable() {
+        document.getElementById("grid").innerHTML = "";
         $("#grid").kendoGrid({
             columns: [
                 {field: "stageName", title: "Стадия"}
@@ -65,21 +66,22 @@
     }
 
     function detailInit(e) {
-        var detailRow = e.detailRow;
-        var model = e.data;
+        let detailRow = e.detailRow;
+        let model = e.data;
         kendo.bind(detailRow, model);
         model.bind('change', function (e) {
-            var tr = $('tr[data-uid=' + model.id + ']');
+            var tr = $('tr[data-uid=' + model.uid + ']');
             $('#grid').data().kendoGrid.expandRow(tr);
-        })
-        detailRow.find(".tabstrip").kendoTabStrip({
-            animation: {
-                open: {effects: "fadeIn"}
-            }
         });
         getStages(objectParm.carId, model.stageName, objectParm.sd, objectParm.ed)
             .then(function (stages) {
-                detailRow.find(".details").kendoGrid({
+                detailRow.find(".tabstrip").kendoTabStrip({
+                    animation: {
+                        open: {effects: "fadeIn"}
+                    }
+                });
+                let detailsRow = detailRow.find(".details");
+                detailsRow.kendoGrid({
                     dataSource: stages,
                     scrollable: true,
                     sortable: true,
@@ -101,6 +103,7 @@
                         },
                     ]
                 });
+                var x = 5;
             });
     }
 
@@ -114,6 +117,7 @@
         },
 
         onSelectCar: function (car) {
+            console.info('onCarSelected', {car: car});
             drawKendoTable();
         },
     });
