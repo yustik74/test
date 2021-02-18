@@ -8,6 +8,7 @@
 <body>
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
 />
+
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
 <script src="external-settings.js"></script>
@@ -24,12 +25,14 @@
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
 
-    var carId = '';
+    var objectParm = Object();
 
     var stagesList = [
         {stageName: 'Motion'},
-        {stageName: 'Geofence'},
-        {stageName: 'Daylight'}
+        {stageName: 'GeoFence*'},
+        {stageName: 'Daylight'},
+        {stageName: 'Power'},
+        {stageName: 'Overspeed'}
     ];
 
     function getStages(carId, stageName, sd, ed) {
@@ -38,8 +41,8 @@
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: carId,
-                sd: dateToApiFormat(sd),
-                ed: dateToApiFormat(ed),
+                sd: dateToUtcApiFormat(sd),
+                ed: dateToUtcApiFormat(ed),
                 tripParams: '*',
                 tripTotalParams: '*',
                 stageName: stageName
@@ -50,8 +53,7 @@
         });
     }
 
-    function drawKendoTable()
-    {
+    function drawKendoTable() {
         $("#grid").kendoGrid({
             columns: [
                 {field: "stageName", title: "Стадия"}
@@ -75,29 +77,43 @@
                 open: {effects: "fadeIn"}
             }
         });
-        var sd = setStartOfTheDay(new Date());
-        var ed = setEndOfTheDay(new Date());
-        getStages(carId, model.stageName, sd, ed).then(function (stages) {
-            detailRow.find(".details").kendoGrid({
-                dataSource: stages,
-                scrollable: false,
-                sortable: true,
-                pageable: true,
-                columns: [
-                    {field: 'Caption', width: 170, title: "Вид движения"},
-                    {field: 'SD', width: 170, title: "Время начала"},
-                    {field: 'ED', width: 170, title: "Время окончания"},
-                    {field: 'StartPoint', width: 170, title: "Стартовая точка"},
-                    {field: 'EndPoint', width: 170, title: "Конечная точка"},
-                ]
+        getStages(objectParm.carId, model.stageName, objectParm.sd, objectParm.ed)
+            .then(function (stages) {
+                detailRow.find(".details").kendoGrid({
+                    dataSource: stages,
+                    scrollable: true,
+                    sortable: true,
+                    columns: [
+                        {field: 'Caption', width: 170, title: "Вид движения"},
+                        {field: 'SD', width: 170, title: "Время начала"},
+                        {field: 'ED', width: 170, title: "Время окончания"},
+                        {
+                            field: 'StartPoint',
+                            width: 170,
+                            title: "Стартовая точка",
+                            template: 'Широта: #: StartPoint.Lng# Долгота #: StartPoint.Lat#'
+                        },
+                        {
+                            field: 'EndPoint',
+                            width: 170,
+                            title: "Конечная точка",
+                            template: 'Широта: #: EndPoint.Lng# Долгота #: EndPoint.Lat#'
+                        },
+                    ]
+                });
             });
-        });
     }
 
     window.parent.AppDispatcher.add('carSelectAppListener', {
+        onTripSelected: function (car, tripIndex, sd, ed) {
+            drawKendoTable();
+            console.info('onTripSelected', {car: car, tripIndex: tripIndex, sd: sd, ed: ed});
+            objectParm.carId = car.ID;
+            objectParm.sd = sd;
+            objectParm.ed = ed;
+        },
+
         onSelectCar: function (car) {
-            console.info('onSelectCar', {car: car});
-            carId = car.ID;
             drawKendoTable();
         },
     });
