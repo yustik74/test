@@ -21,22 +21,28 @@ function round(value, digits = 2) {
 
 //перевод UTC-даты в формат строки для API
 function dateToUtcApiFormat(date) {
-    let twoDigitMonth = ((date.getUTCMonth() + 1) >= 10) ? (date.getUTCMonth() + 1) : '0' + (date.getUTCMonth() + 1);
-    let twoDigitDate = ((date.getUTCDate()) >= 10) ? (date.getUTCDate()) : '0' + (date.getUTCDate());
-    let twoDigitHours = ((date.getUTCHours()) >= 10) ? (date.getUTCHours()) : '0' + (date.getUTCHours());
-    let twoDigitMinutes = ((date.getUTCMinutes()) >= 10) ? (date.getUTCMinutes()) : '0' + (date.getUTCMinutes());
-    let twoDigitSeconds = ((date.getUTCSeconds()) >= 10) ? (date.getUTCSeconds()) : '0' + (date.getUTCSeconds());
-    return date.getUTCFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes + twoDigitSeconds;
+    if (!!date) {
+        let twoDigitMonth = ((date.getUTCMonth() + 1) >= 10) ? (date.getUTCMonth() + 1) : '0' + (date.getUTCMonth() + 1);
+        let twoDigitDate = ((date.getUTCDate()) >= 10) ? (date.getUTCDate()) : '0' + (date.getUTCDate());
+        let twoDigitHours = ((date.getUTCHours()) >= 10) ? (date.getUTCHours()) : '0' + (date.getUTCHours());
+        let twoDigitMinutes = ((date.getUTCMinutes()) >= 10) ? (date.getUTCMinutes()) : '0' + (date.getUTCMinutes());
+        let twoDigitSeconds = ((date.getUTCSeconds()) >= 10) ? (date.getUTCSeconds()) : '0' + (date.getUTCSeconds());
+        return date.getUTCFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes + twoDigitSeconds;
+    }
+    return undefined;
 }
 
 //перевод даты в формат строки для API
 function dateToApiFormat(date) {
-    let twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
-    let twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
-    let twoDigitHours = ((date.getHours()) >= 10) ? (date.getHours()) : '0' + (date.getHours());
-    let twoDigitMinutes = ((date.getMinutes()) >= 10) ? (date.getMinutes()) : '0' + (date.getMinutes());
-    let twoDigitSeconds = ((date.getSeconds()) >= 10) ? (date.getSeconds()) : '0' + (date.getSeconds());
-    return date.getFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes + twoDigitSeconds;
+    if (!!date) {
+        let twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
+        let twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
+        let twoDigitHours = ((date.getHours()) >= 10) ? (date.getHours()) : '0' + (date.getHours());
+        let twoDigitMinutes = ((date.getMinutes()) >= 10) ? (date.getMinutes()) : '0' + (date.getMinutes());
+        let twoDigitSeconds = ((date.getSeconds()) >= 10) ? (date.getSeconds()) : '0' + (date.getSeconds());
+        return date.getFullYear() + twoDigitMonth + twoDigitDate + '-' + (twoDigitHours) + twoDigitMinutes + twoDigitSeconds;
+    }
+    return undefined;
 }
 
 function pointToParameterFormat(point) {
