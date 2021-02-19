@@ -19,6 +19,23 @@ function round(value, digits = 2) {
     return Math.round((value) * multiplier) / multiplier;
 }
 
+function startOfMonth(date) {
+    date.setDate(1);
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    return date;
+}
+
+function endOfMonth(date) {
+    let lastOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    date.setDate(lastOfMonth.getDate());
+    date.setHours(23);
+    date.setMinutes(59);
+    date.setSeconds(59);
+    return date;
+}
+
 //перевод UTC-даты в формат строки для API
 function dateToUtcApiFormat(date) {
     if (!!date) {
