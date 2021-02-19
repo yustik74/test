@@ -71,21 +71,22 @@
             }, function (allDevices) {
                 var allDevicesInGroup = getChilds(allDevices, group.ID);
                 if (allDevicesInGroup.length > 0)
+                    //по всем устройства собираем итоговую информацию по рейсам
                     get(`${parm.Urls.Service}/GetTripsTotal`, {
                         session: parm.Token,
                         schemaID: parm.Organization.UID,
                         IDs: [allDevicesInGroup.map(a => a.ID)],
-                        sd: dateToUtcApiFormat(sd),
-                        ed: dateToUtcApiFormat(ed),
+                        sd: dateToApiFormat(sd),
+                        ed: dateToApiFormat(ed),
                         tripSplitterIndex: -1
                     }, function (totalTrips) {
                         let result = [];
+                        //если запись не нулевая, сохраняем в итог информацию об устройстве и общий пробег за период
                         Object.entries(totalTrips).forEach(function (car) {
                             if (!!car[1].Trips && car[1].Trips.length > 0 && !!car[1].Trips[0].Total) {
                                 result.push({
-                                    //device: car[1].Name + ' serial ' + car[1].Serial,
-                                    device: car[1].Name,
-                                    totalDistance: car[1].Trips[0].Total.TotalDistance
+                                    name: car[1].Name,
+                                    data: [round(car[1].Trips[0].Total.TotalDistance)]
                                 });
                             }
                         });
@@ -98,24 +99,22 @@
     window.parent.AppDispatcher.add('CarGroupListener', {
         onSelectCarGroup: function (group) {
             console.info('onSelectCarGroup', {group: group});
-            getTotalStatsByAllCars(group, startOfMonth(new Date()), endOfMonth(new Date()))
+            var sd = startOfMonth(new Date());
+            var ed = endOfMonth(new Date());
+            getTotalStatsByAllCars(group, sd, ed)
                 .then(function (stats) {
-                    if (stats.length > 0) {
-                        let dataSource = stats.map(item => {
-                            return {
-                                name: item.device,
-                                data: [item.totalDistance]
-                            }
-                        });
-                        $("#chart").kendoChart({
-                            autoBind: true,
-                            series: dataSource,
-                            tooltip: {
-                                visible: true,
-                                template: '#= series.name# #=value# км'
-                            }
-                        });
-                    }
+                    //в качестве источника данных используем массив объектов { name: текстовое имя, data: массив значений }
+                    $("#chart").kendoChart({
+                        title: {
+                            align: "left",
+                            text: 'Пробег по автомобилям за диапазон ' + sd.toLocaleString("ru") + ' - ' + ed.toLocaleString("ru")
+                        },
+                        series: stats,
+                        tooltip: {
+                            visible: true,
+                            template: '#= series.name# #=value# км'
+                        }
+                    });
                 });
         }
     });
