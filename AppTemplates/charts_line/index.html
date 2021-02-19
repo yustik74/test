@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Kendo UI Snippet</title>
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+    />
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
+    <script src="external-settings.js"></script>
+    <script src="web.js"></script>
+    <script src="apiassistant.js"></script>
+    <!DOCTYPE html>
+
+</head>
+<body>
+<div id="chart"></div>
+<script>
+    //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
+    var parm = window['external-settings'];
+
+    function getChilds(array, parent) {
+        let result = [];
+        let groups = [];
+
+        //добавляем выбранную группу
+        array.Groups.filter(a => a.ID == parent).forEach(function (childGroup) {
+            groups.push(childGroup);
+        });
+        //собираем все дочерние группы
+        getChildGroups(array, parent).forEach(function (childGroup) {
+            groups.push(childGroup);
+        });
+        //для каждой группы собираем все дочерние элементы
+        groups.forEach(function (group) {
+            getChildItemsFromGroup(array, group.ID).forEach(function (childItem) {
+                result.push(childItem);
+            });
+        });
+        return result;
+    }
+
+    function getChildGroups(array, parent) {
+        let result = [];
+        let groups = array.Groups.filter(a => a.ParentID == parent);
+        groups.forEach(function (group) {
+            result.push(group);
+            getChildGroups(array, group.ID).forEach(function (childGroup) {
+                result.push(childGroup);
+            });
+        });
+        return result;
+    }
+
+    function getChildItemsFromGroup(array, parent) {
+        let result = [];
+        array.Items.filter(a => a.ParentID == parent).forEach(function (child) {
+            result.push(child);
+        });
+        return result;
+    }
+
+    function getTotalStatsByAllCars(group, sd, ed) {
+        return new Promise((resolve, reject) => {
+            //получаем список всех устройств в группе
+            get(`${parm.Urls.Service}/EnumDevices`, {
+                session: parm.Token,
+                schemaID: parm.Organization.UID
+            }, function (allDevices) {
+                var allDevicesInGroup = getChilds(allDevices, group.ID);
+                if (allDevicesInGroup.length > 0)
+                    //по всем устройства собираем итоговую информацию по рейсам
+                    get(`${parm.Urls.Service}/GetTripsTotal`, {
+                        session: parm.Token,
+                        schemaID: parm.Organization.UID,
+                        IDs: [allDevicesInGroup.map(a => a.ID)],
+                        sd: dateToApiFormat(sd),
+                        ed: dateToApiFormat(ed),
+                        tripSplitterIndex: -1
+                    }, function (totalTrips) {
+                        let result = [];
+                        //если запись не нулевая, сохраняем в итог информацию об устройстве и общий пробег за период
+                        Object.entries(totalTrips).forEach(function (car) {
+                            if (!!car[1].Trips && car[1].Trips.length > 0 && !!car[1].Trips[0].Total) {
+                                result.push({
+                                    name: car[1].Name,
+                                    data: [round(car[1].Trips[0].Total.TotalDistance)]
+                                });
+                            }
+                        });
+                        resolve(result);
+                    });
+            });
+        });
+    }
+
+    window.parent.AppDispatcher.add('CarGroupListener', {
+        onSelectCarGroup: function (group) {
+            console.info('onSelectCarGroup', {group: group});
+            var sd = startOfMonth(new Date());
+            var ed = endOfMonth(new Date());
+            getTotalStatsByAllCars(group, sd, ed)
+                .then(function (stats) {
+                    //в качестве источника данных используем массив объектов { name: текстовое имя, data: массив значений }
+                    $("#chart").kendoChart({
+                        title: {
+                            align: "left",
+                            text: 'Пробег по автомобилям за диапазон ' + sd.toLocaleString("ru") + ' - ' + ed.toLocaleString("ru")
+                        },
+                        series: stats,
+                        tooltip: {
+                            visible: true,
+                            template: '#= series.name# #=value# км'
+                        }
+                    });
+                });
+        }
+    });
+</script>
+</body>
+</html>
