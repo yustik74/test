@@ -17,10 +17,10 @@
     var parm = window['external-settings'];
     var result = [];
     var columns = [
-        {field: "Vehicle"},
-        {field: "Serial"},
-        {field: "Address"},
-        {field: "Geofence"}
+        {field: 'Vehicle', title: 'Устройство'},
+        {field: 'Serial', title: 'Серийный номер'},
+        {field: 'Address', title: 'Адрес'},
+        {field: 'Geofence', title: 'Геозона'}
     ];
 
     let get = function (url, data, callback) {
@@ -86,7 +86,6 @@
 
     window.parent.AppDispatcher.add('GeoGroupListener', {
         onSelectGeoGroup: function (group) {
-            var jobIsFinished = false;
             //инициализируем пустую таблицу
             $("#grid").kendoGrid({
                 columns: columns,
