@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Kendo UI Snippet</title>
+    <title>График пробега автомобиля по датам</title>
 
     <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
     />
@@ -21,103 +21,67 @@
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
     var parm = window['external-settings'];
 
-    function getChilds(array, parent) {
-        let result = [];
-        let groups = [];
-
-        //добавляем выбранную группу
-        array.Groups.filter(a => a.ID == parent).forEach(function (childGroup) {
-            groups.push(childGroup);
-        });
-        //собираем все дочерние группы
-        getChildGroups(array, parent).forEach(function (childGroup) {
-            groups.push(childGroup);
-        });
-        //для каждой группы собираем все дочерние элементы
-        groups.forEach(function (group) {
-            getChildItemsFromGroup(array, group.ID).forEach(function (childItem) {
-                result.push(childItem);
-            });
-        });
-        return result;
-    }
-
-    function getChildGroups(array, parent) {
-        let result = [];
-        let groups = array.Groups.filter(a => a.ParentID == parent);
-        groups.forEach(function (group) {
-            result.push(group);
-            getChildGroups(array, group.ID).forEach(function (childGroup) {
-                result.push(childGroup);
-            });
-        });
-        return result;
-    }
-
-    function getChildItemsFromGroup(array, parent) {
-        let result = [];
-        array.Items.filter(a => a.ParentID == parent).forEach(function (child) {
-            result.push(child);
-        });
-        return result;
-    }
-
-    function getTotalStatsByAllCars(group, sd, ed) {
+    function getTotalStatsByCar(car, sd, ed) {
         return new Promise((resolve, reject) => {
-            //получаем список всех устройств в группе
-            get(`${parm.Urls.Service}/EnumDevices`, {
+            //по всем устройства собираем итоговую информацию по рейсам
+            get(`${parm.Urls.Service}/GetTripsTotal`, {
                 session: parm.Token,
-                schemaID: parm.Organization.UID
-            }, function (allDevices) {
-                var allDevicesInGroup = getChilds(allDevices, group.ID);
-                if (allDevicesInGroup.length > 0)
-                    //по всем устройства собираем итоговую информацию по рейсам
-                    get(`${parm.Urls.Service}/GetTripsTotal`, {
-                        session: parm.Token,
-                        schemaID: parm.Organization.UID,
-                        IDs: [allDevicesInGroup.map(a => a.ID)],
-                        sd: dateToApiFormat(sd),
-                        ed: dateToApiFormat(ed),
-                        tripSplitterIndex: -1
-                    }, function (totalTrips) {
-                        let result = [];
-                        //если запись не нулевая, сохраняем в итог информацию об устройстве и общий пробег за период
-                        Object.entries(totalTrips).forEach(function (car) {
-                            if (!!car[1].Trips && car[1].Trips.length > 0 && !!car[1].Trips[0].Total) {
-                                result.push({
-                                    name: car[1].Name,
-                                    data: [round(car[1].Trips[0].Total.TotalDistance)]
-                                });
-                            }
-                        });
-                        resolve(result);
+                schemaID: parm.Organization.UID,
+                IDs: car.ID,
+                sd: dateToApiFormat(sd),
+                ed: dateToApiFormat(ed),
+                tripSplitterIndex: 0 //деление по суткам
+            }, function (carTrips) {
+                let trips = carTrips[car.ID];
+                let result = [];
+                //сохраняем в итог дату и пробег для каждого отрезка
+                Object.entries(trips.Trips).forEach(function (trip) {
+                    let date = new Date(trip[1].SD);
+                    result.push({
+                        date: date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear(),
+                        distance: round(trip[1].Total.TotalDistance)
                     });
+                });
+                resolve(result);
             });
         });
     }
 
-    window.parent.AppDispatcher.add('CarGroupListener', {
-        onSelectCarGroup: function (group) {
-            console.info('onSelectCarGroup', {group: group});
+    window.parent.AppDispatcher.add('CarChartListener', {
+        onSelectCar: function (car) {
+            console.info('onSelectCar', {car: car});
             var sd = startOfMonth(new Date());
             var ed = endOfMonth(new Date());
-            getTotalStatsByAllCars(group, sd, ed)
+            getTotalStatsByCar(car, sd, ed)
                 .then(function (stats) {
                     //в качестве источника данных используем массив объектов { name: текстовое имя, data: массив значений }
                     $("#chart").kendoChart({
                         title: {
                             align: "left",
-                            text: 'Пробег по автомобилям за диапазон ' + sd.toLocaleString("ru") + ' - ' + ed.toLocaleString("ru")
+                            text: 'Пробег автомобиля за ' + (sd.getMonth() + 1) + '.' + sd.getFullYear()
                         },
-                        series: stats,
+                        series: [{
+                            type: 'line',
+                            name: car.Name,
+                            data: stats.map(item => {
+                                return item.distance
+                            })
+                        }],
+                        categoryAxis: {
+                            categories: stats.map(item => {
+                                return item.date
+                            })
+                        },
                         tooltip: {
                             visible: true,
-                            template: '#= series.name# #=value# км'
+                            template: ' #=value# км'
                         }
-                    });
+                    })
+                    ;
                 });
         }
-    });
+    })
+    ;
 </script>
 </body>
 </html>
