@@ -8,19 +8,26 @@
 <body>
 <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
 />
-<style>
-    #header {
-        color: #161616;
-        padding-bottom: 5px;
-    }
-</style>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
 <script src="external-settings.js"></script>
 <script src="web.js"></script>
 <script src="apiassistant.js"></script>
-<span id="header" data-bind="text: car"></span>
-<span id="header" data-bind="text: period"></span>
+<style>
+    #infoheader {
+        color: #656565;
+        margin-bottom: 10px;
+        font-size: 120%;
+    }
+
+    span {
+        margin-bottom: 50px;
+    }
+</style>
+<div id="infoheader">
+    <span class="header" data-bind="style: {fontWeight: carFontWeight}, text: car"></span>
+    <span class="header" data-bind="text: period"></span>
+</div>
 <div id="grid"></div>
 <script id="detail-template" type="text/x-kendo-template">
     <div>
@@ -41,9 +48,21 @@
         {stageName: 'Overspeed'}
     ];
 
+    function getColumnsForObject(obj) {
+        let fields = Object.getOwnPropertyNames(obj);
+        let columns = [];
+        fields.forEach(function (field) {
+            columns.push({
+                field: field
+            });
+        });
+        return columns;
+    }
+
     function updateHeader(car, date) {
         var viewModel = kendo.observable({
             car: car,
+            carFontWeight: 'bold',
             period: date
         });
 
@@ -56,8 +75,8 @@
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: carId,
-                sd: dateToUtcApiFormat(sd),
-                ed: dateToUtcApiFormat(ed),
+                sd: dateToApiFormat(sd),
+                ed: dateToApiFormat(ed),
                 tripParams: '*',
                 tripTotalParams: '*',
                 stageName: stageName
@@ -68,11 +87,11 @@
         });
     }
 
-    function drawKendoTable() {
+    function drawKendoTable(header = '') {
         document.getElementById("grid").innerHTML = "";
         $("#grid").kendoGrid({
             columns: [
-                {field: "stageName", title: "Стадия"}
+                {field: "stageName", title: "Отрезок"}
             ],
             dataSource: stagesList,
             detailTemplate: kendo.template($("#detail-template").html()),
@@ -81,15 +100,15 @@
     }
 
     function detailInit(e) {
-        let detailRow = e.detailRow;
-        let model = e.data;
-        kendo.bind(detailRow, model);
-        model.bind('change', function (e) {
-            var tr = $('tr[data-uid=' + model.uid + ']');
-            $('#grid').data().kendoGrid.expandRow(tr);
-        });
-        getStages(objectParm.carId, model.stageName, objectParm.sd, objectParm.ed)
+        getStages(objectParm.carId, e.data.stageName, objectParm.sd, objectParm.ed)
             .then(function (stages) {
+                let detailRow = e.detailRow;
+                let model = e.data;
+                kendo.bind(detailRow, model);
+                model.bind('change', function (e) {
+                    var tr = $('tr[data-uid=' + model.uid + ']');
+                    $('#grid').data().kendoGrid.expandRow(tr);
+                });
                 detailRow.find(".tabstrip").kendoTabStrip({
                     animation: {
                         open: {effects: "fadeIn"}
@@ -108,19 +127,20 @@
                             field: 'StartPoint',
                             width: 170,
                             title: "Стартовая точка",
-                            template: 'Широта: #: StartPoint.Lng# Долгота #: StartPoint.Lat#'
+                            template: 'Широта: #: round(StartPoint.Lng, 3)# Долгота #: round(StartPoint.Lat, 3)#'
                         },
                         {
                             field: 'EndPoint',
                             width: 170,
                             title: "Конечная точка",
-                            template: 'Широта: #: EndPoint.Lng# Долгота #: EndPoint.Lat#'
+                            template: 'Широта: #: round(EndPoint.Lng, 3)# Долгота #: round(EndPoint.Lat, 3)#'
                         },
                     ]
                 });
-                var x = 5;
             });
     }
+
+    drawKendoTable();
 
     window.parent.AppDispatcher.add('carSelectAppListener', {
         onTripSelected: function (car, tripIndex, sd, ed) {
@@ -129,11 +149,12 @@
             objectParm.carId = car.ID;
             objectParm.sd = sd;
             objectParm.ed = ed;
-            updateHeader(car.Name + ' ' + car.Serial, dateToUtcApiFormat(sd) + ' - ' + dateToUtcApiFormat(ed));
+            updateHeader(car.Name + ' ' + car.Serial, '(' + sd.toLocaleString("ru") + ' - ' + ed.toLocaleString("ru") + ')');
         },
 
         onSelectCar: function (car) {
             console.info('onCarSelected', {car: car});
+            objectParm.carId = car.ID;
             drawKendoTable();
             updateHeader(car.Name + ' ' + car.Serial, '');
         },
