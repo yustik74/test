@@ -48,17 +48,6 @@
         {stageName: 'Overspeed'}
     ];
 
-    function getColumnsForObject(obj) {
-        let fields = Object.getOwnPropertyNames(obj);
-        let columns = [];
-        fields.forEach(function (field) {
-            columns.push({
-                field: field
-            });
-        });
-        return columns;
-    }
-
     function updateHeader(car, date) {
         var viewModel = kendo.observable({
             car: car,
@@ -69,6 +58,7 @@
         kendo.bind($("span"), viewModel);
     }
 
+    //метод для получения отрезков пути из API
     function getStages(carId, stageName, sd, ed) {
         return new Promise((resolve, reject) => {
             get(parm.Urls.Service + '/GetStage', {
@@ -87,7 +77,8 @@
         });
     }
 
-    function drawKendoTable(header = '') {
+    //инициализируем пустую таблицу и на разворачивание элемента вызываем метод detailInit
+    function drawKendoTable() {
         document.getElementById("grid").innerHTML = "";
         $("#grid").kendoGrid({
             columns: [
@@ -99,6 +90,7 @@
         });
     }
 
+    // берем параметры автомобиля и даты отрезка, из таблицы по выбранному элементу тип отрезка и делаем выборку данных из API
     function detailInit(e) {
         getStages(objectParm.carId, e.data.stageName, objectParm.sd, objectParm.ed)
             .then(function (stages) {
@@ -114,6 +106,7 @@
                         open: {effects: "fadeIn"}
                     }
                 });
+                //заполняем таблицу второго уровня
                 let detailsRow = detailRow.find(".details");
                 detailsRow.kendoGrid({
                     dataSource: stages,
