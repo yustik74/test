@@ -34,8 +34,8 @@
 
 <img src="img/screen.png" alt="Пример" width="800" height="400">
 
-Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH
-API.
+Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из  [AutoGRAPH
+API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 При выборе устройства возникает событие <bold>onSelectCar</bold> и выполняется запрос <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetTrips">GetTripsTotal</a>, результат запроса выводится на график.
 
 ## Перед началом
