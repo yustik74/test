@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+</head>
+<body>
+<pre id="params" style="white-space: pre;"></pre>
+
+<script src="external-settings.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+    $("#params").html(JSON.stringify(window['external-settings'], 0, " "));
+    window.parent.AppDispatcher.add('AppListener', {
+        /*onSelectCar: function (car) {
+            console.info('onSelectCar', {car: car});
+        },*/
+        onSelectCarGroup: function (group) {
+            console.info('onSelectCarGroup', {group: group});
+        },
+        /*onSelectGeo: function (geo) {
+            console.info('onSelectGeo', {geo: geo});
+        },*/
+        /*onSelectGeoGroup: function (group) {
+            console.info('onSelectGeoGroup', {group: group});
+        },*/
+        onSplitToTripsChanged: function (uid, tripSplitterIndex) {
+            console.info('onSplitToTripsChanged', {uid: uid, tripSplitterIndex: tripSplitterIndex});
+        },
+        onTripSelected: function (car, tripIndex, sd, ed) {
+            console.info('onTripSelected', {car: car, tripIndex: tripIndex, sd: sd, ed: ed});
+        },
+        onStageSelected: function (car, stageName, stage, stageItem, angle) {
+            console.info('onStageSelected', {car: car, stageName: stageName, stage: stage, stageItem: stageItem, angle: angle});
+        },
+        /*onTrackClick: function (car, point, angle, pntIndex, timePos, dist) {
+            console.info('onTrackClick', {car: car, point: point, angle: angle, pntIndex: pntIndex, timePos: timePos, dist: dist});
+        },*/
+        onPositions: function (items) {
+            console.info('onPositions', {items: items});
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+html, body {
+    font-family: "Roboto Condensed", sans-serif;
+    font-size: 12pt;
+    margin:0;
+    padding:0;
+    overflow: hidden;
+}
+
+body {
+    margin-top:56px;
+    overflow: hidden !important;
+}
+
+.car-marker {
+    background-color: transparent;
+}
+
+.car-marker .title {
+    margin-top:2px;
+    font-size: 7pt;
+    color:blue;
+    font-weight: normal;
+    text-align:center;
+}
+
+.dropdown-item-selected {
+    background-color: #007bff;
+    color: white;
+}
+
+.dropdown-item-selected:hover {
+    background-color:#007bff;
+}
+
+.nav-link-selected {
+    text-decoration: underline;
+}
+
+.modal-dialog {
+    max-width:700px;
+}
+
+.table th { border: none }
+.table td, .table th { padding:0.1em}
+
+
+.car-marker img { width:24px; height:24px; }
+.gf-marker img { width:24px; height:24px; }
+.stop-marker img { width:24px; height:24px; }
+html, body {
+    overflow:auto;
+}
+fieldset {
+    border: 1px solid silver;
+    padding: 0.5em 1em;
+}
+.hover .commands {
+    opacity: 0.1;
+}
+.hover:hover .commands {
+    opacity: initial;
+}
