@@ -30,7 +30,7 @@
 
 ## О проекте
 
-<img src="img/screen.png" alt="Пример" width="800" height="400">
+<img src="img/screen.png" alt="Пример" width="800" height="600">
 
 Данный пример показывает, как можно использовать [AutoGRAPH
 API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods) для получения количества превышений и максимальной скорости по рейсу.
