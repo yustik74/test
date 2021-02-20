@@ -32,9 +32,12 @@
 
 <img src="img/screen.png" alt="Пример" width="800" height="400">
 
-Данный пример показывает, как можно найти и использовать текущее положение автомобиля с помощью [AutoGRAPH
-API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
-При выборе устройства возникает событие onSelectCar и выполняется запрос <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>, чтобы получить текущее положение автомобиля. По последним координатам делается запрос к встроенному API для получения списка заправок в ближайшем квадрате. Полученные данные отображаются в таблице с координатами и ценами.
+Данный пример показывает, как можно найти и использовать текущее положение автомобиля с
+помощью [AutoGRAPH API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods). При выборе устройства
+возникает событие onSelectCar и выполняется
+запрос <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>, чтобы
+получить текущее положение автомобиля. По последним координатам делается запрос к встроенному API для получения списка
+заправок в ближайшем квадрате. Полученные данные отображаются в таблице с координатами и ценами.
 
 ## Перед началом
 
@@ -43,16 +46,16 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 ### Установка
 
 1. Скопируйте папку с App в AppTemplates
-   
+
 2. Зайдите в Apps
-   
+
     <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
 
 3. Добавьте новый App, уделив внимание выделенным полям (Шаблон - название директории, в которой находится приложение).
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-3. Перезагрузите страницу и включите App в меню
+4. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
@@ -60,9 +63,11 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
 ## Использование
 
-Выберите автомобиль из списка объектов, в окне приложения будет нарисована таблица с ближайшими АЗС, координатами, типом топлива и ценами на топливо. 
+Выберите автомобиль из списка объектов, в окне приложения будет нарисована таблица с ближайшими АЗС, координатами, типом
+топлива и ценами на топливо.
 
-_Для других вариантов использования воспользуйтесь описанием нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
+_Для других вариантов использования воспользуйтесь описанием
+нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
 
 <!-- CONTACT -->
 

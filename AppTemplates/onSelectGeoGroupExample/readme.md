@@ -32,9 +32,13 @@
 
 <img src="img/screen.png" alt="Пример" width="800" height="400">
 
-Данный пример показывает, как можно получить список автомобилей в группе геозон по данным, взятым из  [AutoGRAPH
-API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
-При выборе устройства возникает событие onSelectGeoGroup и выполняются запросы <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumGeoFences">EnumGeoFences</a>, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumDevices">EnumDevices</a>, выбираются все геозоны из группы, все автомобиле в геозоне и результат выводится в таблицу.
+Данный пример показывает, как можно получить список автомобилей в группе геозон по данным, взятым
+из  [AutoGRAPH API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods). При выборе устройства возникает
+событие onSelectGeoGroup и выполняются
+запросы <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumGeoFences">EnumGeoFences</a>
+, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>
+, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumDevices">EnumDevices</a>, выбираются все геозоны
+из группы, все автомобиле в геозоне и результат выводится в таблицу.
 
 ## Перед началом
 
@@ -52,7 +56,7 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-3. Перезагрузите страницу и включите App в меню
+4. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
@@ -60,9 +64,11 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
 ## Использование
 
-Выберите группу геозон из списка геозон, в окне приложения будет выведена таблица со всеми автомобилями, находящимися в данной группе геозон.
+Выберите группу геозон из списка геозон, в окне приложения будет выведена таблица со всеми автомобилями, находящимися в
+данной группе геозон.
 
-_Для других вариантов использования воспользуйтесь описанием нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
+_Для других вариантов использования воспользуйтесь описанием
+нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
 
 <!-- CONTACT -->
 

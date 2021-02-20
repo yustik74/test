@@ -52,7 +52,7 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-3. Перезагрузите страницу и включите App в меню
+4. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 

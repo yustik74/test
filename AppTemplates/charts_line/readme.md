@@ -32,9 +32,11 @@
 
 <img src="img/screen.png" alt="Пример" width="800" height="400">
 
-Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из  [AutoGRAPH
-API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
-При выборе устройства возникает событие <bold>onSelectCar</bold> и выполняется запрос <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetTrips">GetTripsTotal</a>, результат запроса выводится на график.
+Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым
+из  [AutoGRAPH API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods). При выборе устройства возникает
+событие <bold>onSelectCar</bold> и выполняется
+запрос <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetTrips">GetTripsTotal</a>, результат запроса
+выводится на график.
 
 ## Перед началом
 
@@ -43,16 +45,16 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 ### Установка
 
 1. Скопируйте папку с App в AppTemplates
-   
+
 2. Зайдите в Apps
-   
+
     <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
 
 3. Добавьте новый App, уделив внимание выделенным полям (Шаблон - название директории, в которой находится приложение).
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-3. Перезагрузите страницу и включите App в меню
+4. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
@@ -60,9 +62,10 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
 ## Использование
 
-Выберите автомобиль из списка объектов, в окне приложения будет нарисован посуточный график пробега. 
+Выберите автомобиль из списка объектов, в окне приложения будет нарисован посуточный график пробега.
 
-_Для других вариантов использования воспользуйтесь описанием нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
+_Для других вариантов использования воспользуйтесь описанием
+нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
 
 <!-- CONTACT -->
 

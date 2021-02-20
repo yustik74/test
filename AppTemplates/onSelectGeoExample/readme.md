@@ -32,9 +32,12 @@
 
 <img src="img/screen.png" alt="Пример" width="800" height="400">
 
-Данный пример показывает, как можно получить список автомобилей в геозоне по данным, взятым из  [AutoGRAPH
-API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
-При выборе устройства возникает событие onSelectGeo и выполняются запросы <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumDevices">EnumDevices</a>, результат запроса выводится в таблицу.
+Данный пример показывает, как можно получить список автомобилей в геозоне по данным, взятым
+из  [AutoGRAPH API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods). При выборе устройства возникает
+событие onSelectGeo и выполняются
+запросы <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_GetOnlineInfoAll">GetOnlineInfoAll</a>
+, <a href="https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_EnumDevices">EnumDevices</a>, результат запроса
+выводится в таблицу.
 
 ## Перед началом
 
@@ -43,16 +46,16 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 ### Установка
 
 1. Скопируйте папку с App в AppTemplates
-   
+
 2. Зайдите в Apps
-   
+
     <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
 
 3. Добавьте новый App, уделив внимание выделенным полям (Шаблон - название директории, в которой находится приложение).
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-3. Перезагрузите страницу и включите App в меню
+4. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
@@ -60,9 +63,11 @@ API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods).
 
 ## Использование
 
-Выберите геозону из списка геозон, в окне приложения будет выведена таблица со всеми автомобилями, находящимися в данной геозоне.
+Выберите геозону из списка геозон, в окне приложения будет выведена таблица со всеми автомобилями, находящимися в данной
+геозоне.
 
-_Для других вариантов использования воспользуйтесь описанием нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
+_Для других вариантов использования воспользуйтесь описанием
+нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)._
 
 <!-- CONTACT -->
 
