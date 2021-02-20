@@ -4,7 +4,7 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Демо-приложение для построения линейного графика суточного пробега за текущий месяц</h3>
+<h3 align="center">Демо-приложение для построения линейного графика суточного пробега за текущий месяц</h3>
 
   <p align="center"> 
         Демонстрация возможностей внешних App
@@ -38,13 +38,14 @@
   </ol>
 </details>
 
-
-
 ## About The Project
 
-[[File:/img/screen.png|Скриншот]](https://example.com)
+<a href="">
+    <img src="img/screen.png" alt="Пример" width="80" height="80">
+</a>
 
-Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH API.
+Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH
+API.
 
 ## Getting Started
 
@@ -53,6 +54,7 @@
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
+
 * npm
   ```sh
   npm install npm@latest -g
@@ -69,16 +71,17 @@ This is an example of how to list things you need to use the software and how to
    npm install
    ```
 
-
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos
+work well in this space. You may also link to more resources.
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
 <!-- CONTACT -->
+
 ## Contact
 
 Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
