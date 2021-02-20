@@ -4,7 +4,7 @@
     <img src="img/logo_TK_big_ru.png" alt="Logo" width="133" height="29">
   </a>
 
-<h3 align="center">Демо-приложение для построения линейного графика суточного пробега за текущий месяц</h3>
+<h3 align="center">Демо-приложение для получения списка заправок с ценами возле автомобиля</h3>
 
   <p align="center"> 
         Демонстрация возможностей внешних App
@@ -30,7 +30,7 @@
 
 ## О проекте
 
-<img src="img/screen.png" alt="Пример" width="800" height="400">
+<img src="img/screen.png" alt="Пример" width="800" height="600">
 
 Данный пример показывает, как можно найти и использовать текущее положение автомобиля с
 помощью [AutoGRAPH API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods). При выборе устройства

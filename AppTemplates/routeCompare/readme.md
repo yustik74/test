@@ -56,8 +56,8 @@
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-4. Для использования сервиса построения маршрутов [Graphhopper](https://www.graphhopper.com/) добавьте ключи
-   graphhopper_url со значением "https://graphhopper.com/api/1" и graphhopper_api_key
+4. Для использования сервиса построения маршрутов [Graphhopper](https://www.graphhopper.com/), зарегистрируйте в сервисе
+   и добавьте ключи graphhopper_url со значением "https://graphhopper.com/api/1" и graphhopper_api_key
    со [значением вашего ключа API](https://graphhopper.com/dashboard/#/apikeys).
 
    <img src="img/adding-app.png" alt="Меню" width="800" height="600">
