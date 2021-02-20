@@ -41,7 +41,7 @@
 ## About The Project
 
 <a href="">
-    <img src="img/screen.png" alt="Пример" width="800" height="600">
+    <img src="img/screen.png" alt="Пример" width="800" height="400">
 </a>
 
 Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH
