@@ -17,16 +17,16 @@
   <summary><h2 style="display: inline-block">Содержание</h2></summary>
   <ol>
     <li>
-      <a href="#about-the-project">О проекте</a>
+      <a href="#о-проекте">О проекте</a>
     </li>
     <li>
-      <a href="#getting-started">Перед началом</a>
+      <a href="#перед-началом">Перед началом</a>
       <ul>
         <li><a href="#установка">Установка</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Использование</a></li>
-    <li><a href="#contact">Контакты</a></li>
+    <li><a href="#использование">Использование</a></li>
+    <li><a href="#контакты">Контакты</a></li>
   </ol>
 </details>
 
