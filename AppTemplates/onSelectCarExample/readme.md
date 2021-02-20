@@ -10,8 +10,6 @@
         Демонстрация возможностей внешних App
 </p>
 
-
-
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary><h2 style="display: inline-block">Содержание</h2></summary>
