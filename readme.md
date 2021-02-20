@@ -42,7 +42,7 @@
 
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+[[File:/img/screen.png|Скриншот]](https://example.com)
 
 Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH API.
 
