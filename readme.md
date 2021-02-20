@@ -40,41 +40,37 @@
 
 ## About The Project
 
-<img src="img/screen.png" alt="Пример" width="800" height="400">
+<img src="img/screen.png" alt="Пример" width="800" height="600">
+
 
 Данный пример показывает, как можно использовать Kendo Charts для построения графиков по данным, взятым из AutoGRAPH
 API.
 
 ## Getting Started
 
-Для использования скопируйте папку в AppTemplates
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+Для работы примера нужен доступ к AutoGRAPH Web под учетной записью администратора.
 
 ### Installation
 
-1. Clone the repo
-   ```sh
-   git clone https://github.com/github_username/repo_name.git
-   ```
-2. Install NPM packages
-   ```sh
-   npm install
-   ```
+1. Скопируйте папку с App в AppTemplates
+   
+2. Зайдите в Apps
+   
+    <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
+
+3. Добавьте новый App, уделив внимание выделенным полям
+
+    <img src="img/adding-map.png" alt="Меню" width="800" height="600">
+
+3. Перезагрузите страницу и включите App в меню
+
+    <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
 <!-- USAGE EXAMPLES -->
 
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos
-work well in this space. You may also link to more resources.
+Выберите автомобиль из списка объектов
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
