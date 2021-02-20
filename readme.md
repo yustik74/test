@@ -1,7 +1,7 @@
 <br />
 <p align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+  <a href="https://www.tk-nav.ru/">
+    <img src="img/logo_TK_big_ru.png" alt="Logo" width="133" height="29">
   </a>
 
 <h3 align="center">Демо-приложение для построения линейного графика суточного пробега за текущий месяц</h3>
@@ -14,27 +14,19 @@
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
+  <summary><h2 style="display: inline-block">Содержание</h2></summary>
   <ol>
     <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
+      <a href="#about-the-project">О проекте</a>
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#getting-started">Перед началом</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#installation">Установка</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
+    <li><a href="#usage">Использование</a></li>
+    <li><a href="#contact">Контакты</a></li>
   </ol>
 </details>
 
@@ -58,9 +50,9 @@ API.
    
     <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
 
-3. Добавьте новый App, уделив внимание выделенным полям
+3. Добавьте новый App, уделив внимание выделенным полям (Шаблон - название директории, в которой находится приложение).
 
-    <img src="img/adding-app.png" alt="Меню" width="800" height="600">
+    <img src="img/adding-map.png" alt="Меню" width="800" height="600">
 
 3. Перезагрузите страницу и включите App в меню
 
@@ -70,14 +62,12 @@ API.
 
 ## Usage
 
-Выберите автомобиль из списка объектов
+Выберите автомобиль из списка объектов, в окне приложения будет нарисован посуточный график пробега. 
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+_Для других вариантов использования воспользуйтесь описанием нашего [API](https://wiki.tk-chel.ru/index.php/AutoGRAPH.NET_Service_Methods)_
 
 <!-- CONTACT -->
 
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
-
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
+E-mail: <a href="mailto:mail@tk-chel.ru">mail@tk-chel.ru</a>
