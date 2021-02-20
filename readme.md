@@ -60,7 +60,7 @@ API.
 
 3. Добавьте новый App, уделив внимание выделенным полям
 
-    <img src="img/adding-map.png" alt="Меню" width="800" height="600">
+    <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
 3. Перезагрузите страницу и включите App в меню
 
