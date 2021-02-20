@@ -22,7 +22,7 @@
     <li>
       <a href="#getting-started">Перед началом</a>
       <ul>
-        <li><a href="#installation">Установка</a></li>
+        <li><a href="#установка">Установка</a></li>
       </ul>
     </li>
     <li><a href="#usage">Использование</a></li>
@@ -42,7 +42,7 @@ API.
 
 Для работы примера нужен доступ к AutoGRAPH Web под учетной записью администратора.
 
-### Installation
+### Установка
 
 1. Скопируйте папку с App в AppTemplates
    
