@@ -7,7 +7,8 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
 </head>
 <body>
 <pre id="params" style="white-space: pre;"></pre>
@@ -25,21 +26,12 @@
 
     function updateTable(table, inputColumns, dataSource) {
         if (dataSource.length > 0)
-            $(`#${table}`).kendoGrid({
+            $('#' + table).kendoGrid({
                 columns: inputColumns,
                 dataSource: {
                     data: dataSource
                 }
             });
-    }
-
-    function dateToApiFormat(date)
-    {
-            var twoDigitMonth = ((date.getMonth() + 1) >= 10) ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1);
-            var twoDigitDate = ((date.getDate()) >= 10) ? (date.getDate()) : '0' + (date.getDate());
-            var twoDigitHours = ((date.getHours()) >= 10) ? (date.getHours()) : '0' + (date.getHours());
-            var twoDigitMinutes = ((date.getMinutes()) >= 10) ? (date.getMinutes()) : '0' + (date.getMinutes());
-            return `${date.getFullYear()}${twoDigitMonth}${twoDigitDate}-${twoDigitHours}${twoDigitMinutes}`;
     }
 
     let get = function (url, data, callback) {
@@ -61,12 +53,12 @@
             //инициализируем пустую таблицу
             updateTable("grid1", columns1, []);
 
-            get(`${parm.Urls.Service}/GetTrips`, {
+            get(parm.Urls.Service + '/GetTrips', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: car.ID,
-                sd: dateToApiFormat(sd),
-                ed: dateToApiFormat(ed),
+                sd: kendo.format(sd, 'yyyyMMdd-HHmmss'),
+                ed: kendo.format(ed, 'yyyyMMdd-HHmmss'),
                 tripSplitterIndex: 0
             }, function (trips) {
                 updateTable("grid1", columns1, [

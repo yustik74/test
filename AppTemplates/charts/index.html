@@ -65,19 +65,19 @@
     function getTotalStatsByAllCars(group, sd, ed) {
         return new Promise((resolve, reject) => {
             //получаем список всех устройств в группе
-            get(`${parm.Urls.Service}/EnumDevices`, {
+            get(parm.Urls.Service + '/EnumDevices', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID
             }, function (allDevices) {
                 var allDevicesInGroup = getChilds(allDevices, group.ID);
                 if (allDevicesInGroup.length > 0)
                     //по всем устройства собираем итоговую информацию по рейсам
-                    get(`${parm.Urls.Service}/GetTripsTotal`, {
+                    get(parm.Urls.Service + '/GetTripsTotal', {
                         session: parm.Token,
                         schemaID: parm.Organization.UID,
                         IDs: [allDevicesInGroup.map(a => a.ID)],
-                        sd: dateToApiFormat(sd),
-                        ed: dateToApiFormat(ed),
+                        sd: kendo.format(sd, 'yyyyMMdd-HHmmss'),
+                        ed: kendo.format(ed, 'yyyyMMdd-HHmmss'),
                         tripSplitterIndex: -1
                     }, function (totalTrips) {
                         let result = [];

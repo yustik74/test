@@ -10,7 +10,8 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
 <div id="grid"></div>
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
@@ -79,28 +80,27 @@
             infoDiv.textContent = "";
             result = [];
             //получаем список всех устройств в группе
-            get(`${parm.Urls.Service}/EnumDevices`, {
+            get(parm.Urls.Service + '/EnumDevices', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID
             }, function (allDevices) {
                 //получаем список всех онлайн автомобилей
-                get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
+                get(parm.Urls.Service + '/GetOnlineInfoAll', {
                     session: parm.Token,
                     schemaID: parm.Organization.UID,
                     finalParams: '*'
-                }, function (onlineDevices) {
+            },   function (onlineDevices) {
                     //выбираем устройства, принадлежащие группе
                     var allDevicesInGroup = getChilds(allDevices, group.ID);
                     var result = [];
                     //пробегаемся по всем устройствам и если устройство есть в массиве Online - добавляем в результат
-                    allDevicesInGroup.forEach(function (device)
-                    {
-                        var foundDevice = Object.entries(onlineDevices).find(a=> !!a[1] && a[0] == device.ID);
+                    allDevicesInGroup.forEach(function (device) {
+                        var foundDevice = Object.entries(onlineDevices).find(a => !!a[1] && a[0] == device.ID);
                         if (!!foundDevice)
                             result.push(foundDevice);
                     });
                     //вывод результатов
-                    infoDiv.textContent = `Автомобилей онлайн в группе ${group.Name} ${result.length}`;
+                    infoDiv.textContent = 'Автомобилей онлайн в группе ' + group.Name + ' ' + result.length;
                     document.body.appendChild(infoDiv);
                 });
             });

@@ -80,8 +80,8 @@
                     session: parm.Token,
                     schemaID: parm.Organization.UID,
                     IDs: currentTrack.carId,
-                    sd: dateToApiFormat(currentTrack.sd),
-                    ed: dateToApiFormat(currentTrack.ed),
+                    sd: kendo.format(currentTrack.sd, 'yyyyMMdd-HHmmss'),
+                    ed: kendo.format(currentTrack.ed, 'yyyyMMdd-HHmmss'),
                     tripSplitterIndex: 0
                 }
 

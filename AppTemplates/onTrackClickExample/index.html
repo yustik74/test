@@ -7,7 +7,8 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
 </head>
 <body>
 <pre id="params" style="white-space: pre;"></pre>
@@ -35,7 +36,7 @@
 
     function updateTable(table, inputColumns, dataSource) {
         if (dataSource.length > 0)
-            $(`#${table}`).kendoGrid({
+            $('#' + table).kendoGrid({
                 columns: inputColumns,
                 dataSource: {
                     data: dataSource
@@ -90,7 +91,7 @@
             const settings = {
                 "async": true,
                 "crossDomain": true,
-                "url": `https://${hostUrl}lat=${point.lat}&lon=${point.lng}&appid=${parm.Settings['key']}&dt=${utcUnixTime}&lang=ru&units=metric`,
+                "url": 'https://' + hostUrl + 'lat=' + point.lat + '&lon=' + point.lng + '&appid=' + parm.Settings['key'] + '&dt=' + utcUnixTime + '&lang=ru&units=metric',
                 "method": "GET"
             };
 

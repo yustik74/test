@@ -10,7 +10,8 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
 <div id="grid"></div>
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
@@ -44,7 +45,7 @@
             var carsInsideCurrentGeofence = [];
 
             //получаем список всех онлайн автомобилей
-            Get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
+            Get(parm.Urls.Service + '/GetOnlineInfoAll', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 finalParams: '*'
@@ -65,7 +66,7 @@
                 });
 
                 //получаем список всех устройств
-                Get(`${parm.Urls.Service}/EnumDevices`, {
+                Get(parm.Urls.Service + '/EnumDevices', {
                     session: parm.Token,
                     schemaID: parm.Organization.UID
                 }, function (allDevices) {

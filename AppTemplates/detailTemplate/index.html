@@ -65,8 +65,8 @@
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: carId,
-                sd: dateToApiFormat(sd),
-                ed: dateToApiFormat(ed),
+                sd: kendo.format(sd, 'yyyyMMdd-HHmmss'),
+                ed: kendo.format(ed, 'yyyyMMdd-HHmmss'),
                 tripParams: '*',
                 tripTotalParams: '*',
                 stageName: stageName
