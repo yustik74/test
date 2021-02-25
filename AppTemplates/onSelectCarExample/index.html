@@ -10,8 +10,8 @@
             font-family: serif; /* Шрифт с засечками */
             color: #656565;
         }
-        div.tableEntry
-        {
+
+        div.tableEntry {
             padding-bottom: 45px;
         }
     </style>
@@ -22,7 +22,8 @@
 <script src="external-settings.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
 <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css" />
+<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+/>
 <div id="grid"></div>
 <script>
     //в external-settings хранятся настройки текущей сессии, в том числе адрес API и токен текущей сессии
@@ -51,7 +52,7 @@
 
     function printClosestGasStations(Position) {
         //получаем список объектов в квадрате 10х10км
-        get(`/ESGeo/Load/${parm.Organization.ID}`, {
+        get(parm.Urls.App + 'ESGeo/Load/' + parm.Organization.ID, {
             service: "GasStations",
             lat1: Position.Lat - tolerance,
             lng1: Position.Lng - tolerance,
@@ -100,11 +101,11 @@
                 );
         });
         if (dataSource.length > 0) {
-            var tableHeaderDivName = `view${divCounter}`;
+            var tableHeaderDivName = 'view' + divCounter;
 
             //создаем div для записи объекта
             var tableEntryDiv = document.createElement('div');
-            tableEntryDiv.setAttribute("id", `tableEntry${divCounter}`);
+            tableEntryDiv.setAttribute("id", 'tableEntry' + divCounter);
             tableEntryDiv.setAttribute("class", "tableEntry");
             //добавляем заголовочный div
             var headerDiv = document.createElement('div');
@@ -125,22 +126,21 @@
             //добавляем таблицу с ценами на топливо
             appendTableToDiv(tableEntryDiv, dataSource);
             document.body.appendChild(tableEntryDiv);
-            kendo.bind($(`#${tableHeaderDivName}`), viewModel);
+            kendo.bind($('#' + tableHeaderDivName), viewModel);
         }
     }
 
     //конструктор span для kendo
-    function createSpan(fieldName)
-    {
+    function createSpan(fieldName) {
         var spanElement = document.createElement('span');
-        spanElement.setAttribute("data-format","standart");
-        spanElement.setAttribute("data-bind", `text: ${fieldName}`);
+        spanElement.setAttribute("data-format", "standart");
+        spanElement.setAttribute("data-bind", 'text: ' + fieldName);
         return spanElement;
     }
 
     //создаем, заполняем таблицу и добавляем ее в родительский div
     function appendTableToDiv(divSource, dataSource) {
-        let tableName = `tab${divCounter}`;
+        let tableName = 'tab' + divCounter;
         var newDiv = document.createElement('div');
         newDiv.setAttribute("id", tableName);
         newDiv.appendChild(document.createElement("br"));
@@ -150,10 +150,9 @@
         divCounter++;
     }
 
-    function updateTable(tableName, dataSource)
-    {
+    function updateTable(tableName, dataSource) {
         if (dataSource.length > 0)
-            $(`#${tableName}`).kendoGrid({
+            $('#' + tableName).kendoGrid({
                 columns: columns,
                 dataSource: {
                     data: dataSource
@@ -161,11 +160,9 @@
             });
     }
 
-    function removeTables(maxCounter)
-    {
-        for (var counter = 0; counter < maxCounter; counter++)
-        {
-            document.getElementById(`tableEntry${counter}`).remove();
+    function removeTables(maxCounter) {
+        for (let counter = 0; counter < maxCounter; counter++) {
+            document.getElementById('tableEntry' + counter).remove();
         }
     }
 
@@ -177,7 +174,7 @@
 
             divCounter = 0;
             //получаем список всех онлайн устройств, чтобы выдернуть последнюю координату выбранного устройства и запустить поиск заправок поблизости
-            get(`${parm.Urls.Service}/GetOnlineInfoAll`, {
+            get(parm.Urls.Service + '/GetOnlineInfoAll', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 finalParams: '*'
