@@ -76,8 +76,8 @@
                         session: parm.Token,
                         schemaID: parm.Organization.UID,
                         IDs: [allDevicesInGroup.map(a => a.ID)],
-                        sd: kendo.format(sd, 'yyyyMMdd-HHmmss'),
-                        ed: kendo.format(ed, 'yyyyMMdd-HHmmss'),
+                        sd: kendo.toString(sd, 'yyyyMMdd-HHmmss'),
+                        ed: kendo.toString(ed, 'yyyyMMdd-HHmmss'),
                         tripSplitterIndex: -1
                     }, function (totalTrips) {
                         let result = [];

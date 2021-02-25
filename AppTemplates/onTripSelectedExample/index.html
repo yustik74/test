@@ -57,8 +57,8 @@
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: car.ID,
-                sd: kendo.format(sd, 'yyyyMMdd-HHmmss'),
-                ed: kendo.format(ed, 'yyyyMMdd-HHmmss'),
+                sd: kendo.toString(sd, 'yyyyMMdd-HHmmss'),
+                ed: kendo.toString(ed, 'yyyyMMdd-HHmmss'),
                 tripSplitterIndex: 0
             }, function (trips) {
                 updateTable("grid1", columns1, [
