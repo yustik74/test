@@ -12,7 +12,6 @@
     <script src="external-settings.js"></script>
     <script src="js/web.js"></script>
     <script src="js/apiassistant.js"></script>
-    <!DOCTYPE html>
 
 </head>
 <body>
@@ -24,7 +23,7 @@
     function getTotalStatsByCar(car, sd, ed) {
         return new Promise((resolve, reject) => {
             //по всем устройства собираем итоговую информацию по рейсам
-            get(`${parm.Urls.Service}/GetTripsTotal`, {
+            get(parm.Urls.Service + '/GetTripsTotal', {
                 session: parm.Token,
                 schemaID: parm.Organization.UID,
                 IDs: car.ID,
