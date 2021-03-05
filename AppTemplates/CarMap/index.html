@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""
+    />
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin=""></script>
+    <script src='https://unpkg.com/leaflet.marker.slideto@0.2.0/Leaflet.Marker.SlideTo.js'></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
+    <script src="external-settings.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+    />
+</head>
+<body>
+<div id="map"></div>
+<script src="js/map.js"></script>
+<script>
+    var parm = window['external-settings'];
+    var onlineDevices = [];
+    var imagesPath = parm.Urls.App + "Content/cars/default/AG.NET/";
+    var mapObject = InitMap('map', parm.Settings['ClusterSize']);
+    var bounds = [];
+    var currentGroupId;
+    var currentDevices = [];
+
+    updateDevices().then((online) => {
+        onlineDevices = online;
+        console.log(onlineDevices);
+        drawDevices(onlineDevices, currentGroupId);
+        mapObject.map.fitBounds(bounds);
+    });
+
+    let timeout = parm.Settings['RefreshTime'];
+    if (!!!timeout) timeout = 60;
+    setUpdateTimer(timeout);
+
+    function drawDevices(onlineDevices, groupID = null) {
+        if (!!!groupID) {
+            let removeDevices = [];
+            let newDevices = [];
+            let changedDevices = [];
+            onlineDevices.forEach(function (device) {
+                let found = currentDevices.find(a => a.Name == device.Name);
+                if (!!found) {
+                    found.LastPosition = device.LastPosition;
+                    changedDevices.push(found);
+                } else {
+                    newDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
+                }
+            });
+            currentDevices.forEach(function (device) {
+                let found = onlineDevices.find(a => a.Name == device.Name);
+                if (!!!found)
+                    removeDevices.push(device);
+            });
+            removeDevices.forEach(function (device) {
+                mapObject.devicesLayer.removeLayer(device.Marker);
+                currentDevices.splice(currentDevices.indexOf(device), 1);
+            });
+            newDevices.forEach(function (device) {
+                mapObject.devicesLayer.addLayer(device.Marker);
+                currentDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
+            });
+            changedDevices.forEach(function (device) {
+                device.Marker.slideTo([device.LastPosition.Lat, device.LastPosition.Lng], {
+                    duration: 500,
+                });
+            });
+            bounds = [];
+            onlineDevices.forEach(item => {
+                bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
+            });
+        }
+    }
+
+    function updateDevices() {
+        return new Promise(function (resolve) {
+            //получаем список всех устройств в группе
+            $.get({
+                url: parm.Urls.Service + '/EnumDevices?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
+                success: function (allDevices) {
+                    console.log(allDevices);
+                    $.get({
+                        url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
+                        success: function (onlineInfoAll) {
+                            console.log(onlineInfoAll);
+                            let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1]).map(item => {
+                                return {
+                                    LastPosition: item[1].LastPosition,
+                                    Name: item[1].Name,
+                                    Course: item[1].Course,
+                                    State: item[1].State,
+                                    Speed: item[1].Speed,
+                                    Marker: createMarker(item[1], allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]).Image)
+                                }
+                            });
+                            resolve(online);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function createMarker(item, image) {
+        let carIcon;
+        if (!!image) {
+            carIcon = L.icon({
+                iconUrl: imagesPath + image,
+                iconSize: [32, 32],
+                popupAnchor: [-3, -76],
+            });
+        }
+        let marker = !!carIcon ? L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {icon: carIcon}) : L.marker([item.LastPosition.Lat, item.LastPosition.Lng]);
+        marker.bindPopup(item.Name + "<br>Скорость: " + item.Speed + "<br>Состояние: " + getStateName(item.State));
+        return marker;
+    }
+
+    function getStateName(state) {
+        switch (state) {
+            case 0:
+                return "Остановка";
+            case 0:
+                return "Движение";
+            case 0:
+                return "Полет";
+            default:
+                return "Неизвестно";
+        }
+    }
+
+    function setUpdateTimer(timeoutSeconds) {
+        setInterval(() => {
+            updateDevices().then((result) => drawDevices(result, currentGroupId))
+        }, timeoutSeconds * 1000);
+    }
+</script>
+</body>
+</html>
