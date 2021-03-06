@@ -13,6 +13,23 @@
             height: 100%;
             width: 100%;
         }
+
+        .controlWrapper {
+            position: fixed;
+            width: 300px;
+            right: 20px;
+            top: 20px;
+            background-color: rgba(0, 0, 0, .7);
+            border-radius: 10px;
+            padding: 10px 0;
+        }
+
+        .container-fluid {
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
     </style>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -30,103 +47,220 @@
     />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
+    <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+    />
 </head>
 <body>
+<div class="controlWrapper" id="form">
+    <div class="container-fluid">
+        <div id="mainGroups">
+        <span title class="k-widget k-dropdown" role="listbox">
+            <input data-role="dropdownlist"
+                   data-auto-bind="false"
+                   data-value-primitive="true"
+                   data-text-field="Name" data-value-field="ID"
+                   data-bind="
+                                        value:ID,
+                                        source:Groups,
+                                        events: {change: onChange}"/>
+            </span>
+            </span>
+        </div>
+        <div id="childGroups" class="demo-section k-content">
+        <span title class="k-widget k-dropdown" role="listbox">
+            <input data-role="dropdownlist"
+                   data-auto-bind="false"
+                   data-value-primitive="true"
+                   data-text-field="Name" data-value-field="ID"
+                   data-bind="
+                                        value:ID,
+                                        source:Groups,
+                                        events: {change: onChange}"/>
+            </span>
+        </div>
+    </div>
+</div>
 <div id="map"></div>
 <script src="js/map.js"></script>
+<script src="js/treehelper.js"></script>
 <script>
     var parm = window['external-settings'];
     var onlineDevices = [];
     var imagesPath = parm.Urls.App + "Content/cars/default/AG.NET/";
-    var mapObject = InitMap('map', parm.Settings['ClusterSize']);
+    //var mapObject = InitMap('map', parm.Settings['ClusterSize']);
     var bounds = [];
     var currentGroupId;
     var currentDevices = [];
+    var allDevices = [];
+    var mainGroupsViewModel;
+    var nestedGroupsViewModel;
+    var rootGroup;
 
-    updateDevices().then((online) => {
-        onlineDevices = online;
-        console.log(onlineDevices);
-        drawDevices(onlineDevices, currentGroupId);
-        mapObject.map.fitBounds(bounds);
+    updateOrganization().then((devices) => {
+        allDevices = devices;
+        rootGroup = devices.Groups.find(a => a.ParentID == null);
+        let rootGroups = [];
+
+        rootGroups.push({
+            Name: "Все объекты",
+            ID: rootGroup.ID
+        });
+
+        let rootGroupsArray = getChildFromGroups(rootGroup.ID);
+        rootGroupsArray.forEach(function (group) {
+            rootGroups.push(group);
+        });
+
+        mainGroupsViewModel = kendo.observable({
+            ID: rootGroups[0].ID,
+            Name: rootGroups[0].Name,
+            Groups: rootGroups,
+            onChange: onMainGroupChange
+        });
+        kendo.bind($("#mainGroups"), mainGroupsViewModel);
+
+        updateL2Dropdown(rootGroups[0].ID);
+        /*updateDevices().then((online) => {
+            onlineDevices = online;
+            console.log(onlineDevices);
+            drawDevices(onlineDevices, currentGroupId);
+            mapObject.map.fitBounds(bounds);
+        });*/
     });
 
     let timeout = parm.Settings['RefreshTime'];
     if (!!!timeout) timeout = 60;
     setUpdateTimer(timeout);
 
-    function drawDevices(onlineDevices, groupID = null) {
+    function updateL2Dropdown() {
+        let childGroups = [];
+        childGroups.push({
+            ID: rootGroup.ID,
+            Name: "Все машины"
+        });
+        if (mainGroupsViewModel.get('ID') != rootGroup.ID) {
+            let childGroupsArray = getChildFromGroups(mainGroupsViewModel.get('ID'));
+            childGroupsArray.forEach(function (group) {
+                childGroups.push(group);
+            });
+        }
+        nestedGroupsViewModel = kendo.observable({
+            ID: childGroups[0].ID,
+            Name: childGroups[0].Name,
+            Groups: childGroups,
+            onChange: onGroupChange
+        });
+        kendo.bind($("#childGroups"), nestedGroupsViewModel);
+    }
+
+    function onMainGroupChange() {
+        updateL2Dropdown();
+    }
+
+    function onGroupChange() {
+        alert('event!');
+    }
+
+    function getChildFromGroups(parentID) {
+        let result = [];
+        allDevices.Groups.filter(a => a.ParentID == parentID)
+            .map(item => {
+                return {Name: item.Name, ID: item.ID}
+            }).forEach(function (item) {
+            result.push(item);
+        });
+        return result;
+    }
+
+    function filterDevices(groupID, devices) {
         if (!!!groupID) {
-            let removeDevices = [];
-            let newDevices = [];
-            let changedDevices = [];
-            onlineDevices.forEach(function (device) {
-                let found = currentDevices.find(a => a.Name == device.Name);
-                if (!!found) {
-                    found.LastPosition = device.LastPosition;
-                    changedDevices.push(found);
-                } else {
-                    newDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
-                }
-            });
-            currentDevices.forEach(function (device) {
-                let found = onlineDevices.find(a => a.Name == device.Name);
-                if (!!!found)
-                    removeDevices.push(device);
-            });
-            removeDevices.forEach(function (device) {
-                mapObject.devicesLayer.removeLayer(device.Marker);
-                currentDevices.splice(currentDevices.indexOf(device), 1);
-            });
-            newDevices.forEach(function (device) {
-                mapObject.devicesLayer.addLayer(device.Marker);
-                currentDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
-            });
-            changedDevices.forEach(function (device) {
-                device.Marker.slideTo([device.LastPosition.Lat, device.LastPosition.Lng], {
-                    duration: 500,
-                });
-            });
-            bounds = [];
-            onlineDevices.forEach(item => {
-                bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
-            });
+            return devices;
+        } else {
+            return getChilds(devices, groupID);
         }
     }
 
-    function updateDevices() {
+    function drawDevices(onlineDevices) {
+        let removeDevices = [];
+        let newDevices = [];
+        let changedDevices = [];
+        onlineDevices.forEach(function (device) {
+            let found = currentDevices.find(a => a.Name == device.Name);
+            if (!!found) {
+                found.LastPosition = device.LastPosition;
+                changedDevices.push(found);
+            } else {
+                newDevices.push({
+                    Name: device.Name,
+                    Marker: createMarker(device),
+                    LastPosition: device.LastPosition
+                });
+            }
+        });
+        currentDevices.forEach(function (device) {
+            let found = onlineDevices.find(a => a.Name == device.Name);
+            if (!!!found)
+                removeDevices.push(device);
+        });
+        removeDevices.forEach(function (device) {
+            mapObject.devicesLayer.removeLayer(device.Marker);
+            currentDevices.splice(currentDevices.indexOf(device), 1);
+        });
+        newDevices.forEach(function (device) {
+            mapObject.devicesLayer.addLayer(device.Marker);
+            currentDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
+        });
+        changedDevices.forEach(function (device) {
+            device.Marker.slideTo([device.LastPosition.Lat, device.LastPosition.Lng], {
+                duration: 500,
+            });
+        });
+        bounds = [];
+        onlineDevices.forEach(item => {
+            bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
+        });
+    }
+
+    function updateOrganization() {
         return new Promise(function (resolve) {
-            //получаем список всех устройств в группе
+            //получаем список всех устройств в организации
             $.get({
                 url: parm.Urls.Service + '/EnumDevices?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (allDevices) {
-                    console.log(allDevices);
-                    $.get({
-                        url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
-                        success: function (onlineInfoAll) {
-                            console.log(onlineInfoAll);
-                            let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1]).map(item => {
-                                return {
-                                    LastPosition: item[1].LastPosition,
-                                    Name: item[1].Name,
-                                    Course: item[1].Course,
-                                    State: item[1].State,
-                                    Speed: item[1].Speed,
-                                    Marker: createMarker(item[1], allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]).Image)
-                                }
-                            });
-                            resolve(online);
-                        }
-                    });
+                    resolve(allDevices);
                 }
             });
         });
     }
 
-    function createMarker(item, image) {
+    function updateDevices() {
+        return new Promise(function (resolve) {
+            $.get({
+                url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
+                success: function (onlineInfoAll) {
+                    console.log(onlineInfoAll);
+                    let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1]).map(item => {
+                        return {
+                            LastPosition: item[1].LastPosition,
+                            Name: item[1].Name,
+                            Course: item[1].Course,
+                            State: item[1].State,
+                            Speed: item[1].Speed,
+                            Image: allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]).Image
+                        }
+                    });
+                    resolve(online);
+                }
+            });
+        });
+    }
+
+    function createMarker(item) {
         let carIcon;
-        if (!!image) {
+        if (!!item.Image) {
             carIcon = L.icon({
-                iconUrl: imagesPath + image,
+                iconUrl: imagesPath + item.Image,
                 iconSize: [32, 32],
                 popupAnchor: [-3, -76],
             });
