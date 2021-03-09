@@ -9,7 +9,17 @@ function InitMap(id, maxClusterRadius) {
         .addTo(mapObject.map);
     if (!!!maxClusterRadius)
         maxClusterRadius = 120;
-    mapObject.devicesLayer = L.markerClusterGroup({maxClusterRadius: maxClusterRadius}).addTo(mapObject.map);
+    mapObject.devicesLayer = L.markerClusterGroup({
+        maxClusterRadius: maxClusterRadius,
+        iconCreateFunction: function (cluster) {
+            let count = cluster.getAllChildMarkers().length;
+            return L.divIcon({
+                html: count,
+                className: 'cluster-icon',
+                iconSize: L.point(45, 45)
+            });
+        },
+    }).addTo(mapObject.map);
     return mapObject;
 }
 
