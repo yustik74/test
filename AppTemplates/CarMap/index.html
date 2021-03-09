@@ -44,6 +44,38 @@
             margin-right: auto;
             margin-left: auto;
         }
+
+        .semi-white {
+            color: #f0f0f0;
+        }
+
+        .col-xs-12 {
+            width: 100%;
+        }
+
+        .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+            float: left;
+        }
+
+        .overflow {
+            height: 200px;
+        }
+
+        button, input, select, textarea {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        button, select {
+            text-transform: none;
+        }
+
+        button, input, optgroup, select, textarea {
+            margin: 0;
+            font: inherit;
+            color: inherit;
+        }
     </style>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -70,7 +102,7 @@
 <div class="controlWrapper" id="form">
     <div class="container-fluid">
         <div id="mainGroups">
-        <span title class="k-widget k-dropdown" role="listbox">
+        <span title class="k-widget k-dropdown" role="listbox" class="overflow" style="width: 270px">
             <input data-role="dropdownlist"
                    data-auto-bind="false"
                    data-value-primitive="true"
@@ -82,8 +114,8 @@
             </span>
             </span>
         </div>
-        <div id="childGroups" class="demo-section k-content">
-        <span title class="k-widget k-dropdown" role="listbox">
+        <div id="childGroups">
+        <span title class="k-widget k-dropdown" role="listbox" style="width: 270px">
             <input data-role="dropdownlist"
                    data-auto-bind="false"
                    data-value-primitive="true"
@@ -93,6 +125,40 @@
                                         source:Groups,
                                         events: {change: onChange}"/>
             </span>
+        </div>
+        <div id="statistics">
+            <div class="col-xs-12 semi-white">
+                Всего машин
+                <hr>
+            </div>
+            <div id="allTrucks" class="col-xs-3 semi-white">
+            </div>
+            <div class="col-xs-9" style="/*padding-left: 0;*/">
+                <div class="col-xs-12" style="padding: 0; background-color: rgba(255,255,255,.3);">
+                    <div id="totalProgress"
+                         data-role="progressbar"
+                         data-min="0"
+                         data-bind="enabled: isEnabled,
+                            value: totalCarsInGroup"
+                         style="width: 270px; background-color: #ccc; height: 20px;"></div>
+                </div>
+            </div>
+            <div class="col-xs-12 semi-white" style="margin-top: 10px;">
+                Машин на линии
+                <hr>
+            </div>
+            <div id="allTrucksOnline" class="col-xs-3 semi-white">
+            </div>
+            <div class="col-xs-9" style="/*padding-left: 0;*/">
+                <div class="col-xs-12" style="padding: 0; background-color: rgba(255,255,255,.3);">
+                    <div id="onlineProgress"
+                         data-role="progressbar"
+                         data-min="0"
+                         data-bind="enabled: isEnabled,
+                            value: carsInGroupOnline"
+                         style="width: 270px; background-color: #ccc; height: 20px;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -113,7 +179,7 @@
 
     let mainGroupsViewModel; //объекты для меню первого уровня
     let nestedGroupsViewModel; //объекты для меню второго уровня
-
+    let statsViewModel;
 
     updateOrganization().then((devices) => {
         allDevices = devices;
@@ -130,11 +196,23 @@
             if (!!!timeout) timeout = 60;
             setUpdateTimer(timeout);
         });
-
+        initStats();
     });
 
-    function updateL1Dropdown()
-    {
+    function initStats() {
+        let statsInfo = {
+            totalCarsInGroup: 0,
+            carsInGroupOnline: 0
+        };
+        statsViewModel = kendo.observable(statsInfo);
+        kendo.bind($('#statistics'), statsViewModel);
+        let pbTotal = $("#totalProgress").data("kendoProgressBar");
+        let pbOnline = $("#onlineProgress").data("kendoProgressBar");
+        pbTotal.options.max = allDevices.Items.length;
+        pbOnline.options.max = allDevices.Items.length;
+    }
+
+    function updateL1Dropdown() {
         let rootGroups = [];
 
         rootGroups.push({
@@ -159,7 +237,7 @@
     function updateL2Dropdown() {
         let childGroups = [];
         childGroups.push({
-            ID: rootGroup.ID,
+            ID: mainGroupsViewModel.get('ID'),
             Name: "Все машины"
         });
         if (mainGroupsViewModel.get('ID') != rootGroup.ID) {
@@ -181,13 +259,15 @@
         updateL2Dropdown();
         currentGroupId = mainGroupsViewModel.get("ID");
         drawSubgroupDevices(onlineDevices);
-        mapObject.map.fitBounds(bounds);
+        if (bounds.length > 0)
+            mapObject.map.fitBounds(bounds);
     }
 
     function onGroupChange() {
         currentGroupId = nestedGroupsViewModel.get("ID");
         drawSubgroupDevices(onlineDevices);
-        mapObject.map.fitBounds(bounds);
+        if (bounds.length > 0)
+            mapObject.map.fitBounds(bounds);
     }
 
     function drawSubgroupDevices(devices, groupID) {
@@ -201,6 +281,8 @@
                 childrenToDraw.push(found);
             }
         });
+        statsViewModel.set('carsInGroupOnline', childrenToDraw.length);
+        statsViewModel.set('totalCarsInGroup', children.length);
         drawDevices(childrenToDraw);
     }
 
