@@ -2,139 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Уборочная техника</title>
     <style>
-        body {
-            padding: 0;
-            margin: 0;
-            font-family: 'Roboto Condensed';
-        }
 
-        html, body, #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        .controlWrapper {
-            position: fixed;
-            width: 300px;
-            right: 20px;
-            top: 20px;
-            background-color: rgba(0, 0, 0, .7);
-            border-radius: 10px;
-            padding: 10px 0;
-        }
-
-        @media (max-width: 768px) {
-            .controlWrapper {
-                position: fixed;
-                width: 100%;
-                top: 0px;
-                left: 0px;
-                right: 0px;
-                background-color: rgba(0, 0, 0, .7);
-                border-radius: 0;
-                padding: 10px 0;
-            }
-
-            #logo {
-                width: 35%;
-            }
-        }
-
-        .container-fluid {
-            padding-right: 15px;
-            padding-left: 15px;
-            margin-right: auto;
-            margin-left: auto;
-        }
-
-        .semi-white {
-            color: #f0f0f0;
-        }
-
-        .col-xs-12 {
-            width: 100%;
-        }
-
-        .col-xs-12, .col-xs-3 {
-            float: left;
-        }
-
-        button, input, select, textarea {
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-        }
-
-        button, select {
-            text-transform: none;
-        }
-
-        button, input, optgroup, select, textarea {
-            margin: 0;
-            font: inherit;
-            color: inherit;
-        }
-
-        .cluster-icon {
-            background: url(../../../Content/images/Polygons-01.svg);
-            text-rendering: geometricPrecision;
-            -webkit-tap-highlight-color: transparent;
-            border-collapse: collapse;
-            box-sizing: border-box;
-            padding: 0;
-            border: 0;
-            font: inherit;
-            vertical-align: middle;
-            margin: 0;
-            font-size: 13px;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            color: #fff;
-            text-shadow: 2px 2px 0 rgba(0, 0, 0, .3);
-            line-height: 45px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            user-select: none;
-            -webkit-user-drag: none;
-            display: block;
-            cursor: pointer;
-            pointer-events: auto;
-            margin-left: -22.5px;
-            margin-top: -22.5px;
-            width: 45px;
-            height: 45px;
-            transform: translate3d(5233px, -128px, 0px);
-            z-index: -128;
-        }
     </style>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+    />
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
+    />
+    <link rel="stylesheet" href="css/main.css"
+    />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
           integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
           crossorigin=""
     />
     <link rel='stylesheet' href='../../..//bundles/main.min.css?2021.2.12.0'/>
 
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script src="js/map.js"></script>
+    <script src="js/treehelper.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
             integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin=""></script>
     <script src='https://unpkg.com/leaflet.marker.slideto@0.2.0/Leaflet.Marker.SlideTo.js'></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
-    <script src="external-settings.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
-    />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
-    />
     <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
-    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.1.119/styles/kendo.default-v2.min.css"
-    />
+    <script src="external-settings.js"></script>
 </head>
 <body>
 <div style="position: fixed; width: 100%; height: 100%;" id="map"></div>
 <div class="controlWrapper" id="form">
-    <div class="container-fluid">
+    <div class="container">
         <div id="logoDiv" style="text-align: center; margin-bottom: 10px; width: 100%" hidden="true">
             <img id="logo" src="">
         </div>
@@ -150,7 +51,7 @@
                                         events: {change: onChange}"/>
             </span>
         </div>
-        <div id="childGroups">
+        <div id="childrenGroups">
         <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
             <input data-role="dropdownlist"
                    data-auto-bind="false"
@@ -194,8 +95,6 @@
         </div>
     </div>
 </div>
-<script src="js/map.js"></script>
-<script src="js/treehelper.js"></script>
 <script>
     const parm = window['external-settings'];
     const imagesPath = parm.Urls.App + "Content/cars/default/AG.NET/";
@@ -274,24 +173,24 @@
     }
 
     function updateL2Dropdown() {
-        let childGroups = [];
-        childGroups.push({
+        let childrenGroups = [];
+        childrenGroups.push({
             ID: mainGroupsViewModel.get('ID'),
             Name: "Все машины"
         });
         if (mainGroupsViewModel.get('ID') != rootGroup.ID) {
-            let childGroupsArray = getChildrenGroups(allDevices, mainGroupsViewModel.get('ID'));
-            childGroupsArray.forEach(function (group) {
-                childGroups.push(group);
+            let childrenGroupsArray = getChildrenGroups(allDevices, mainGroupsViewModel.get('ID'));
+            childrenGroupsArray.forEach(function (group) {
+                childrenGroups.push(group);
             });
         }
         nestedGroupsViewModel = kendo.observable({
-            ID: childGroups[0].ID,
-            Name: childGroups[0].Name,
-            Groups: childGroups,
+            ID: childrenGroups[0].ID,
+            Name: childrenGroups[0].Name,
+            Groups: childrenGroups,
             onChange: onGroupChange
         });
-        kendo.bind($("#childGroups"), nestedGroupsViewModel);
+        kendo.bind($("#childrenGroups"), nestedGroupsViewModel);
     }
 
     function onMainGroupChange() {
@@ -415,6 +314,13 @@
             default:
                 return "Неизвестно";
         }
+    }
+
+    function round(value, digits = 2) {
+        var multiplier = 1;
+        for (var counter = 0; counter < digits; counter++)
+            multiplier *= 10;
+        return Math.round((value) * multiplier) / multiplier;
     }
 
     function setUpdateTimer(timeoutSeconds) {

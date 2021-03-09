@@ -1,0 +1,105 @@
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Roboto Condensed';
+}
+
+html, body, #map {
+    height: 100%;
+    width: 100%;
+}
+
+.controlWrapper {
+    position: fixed;
+    width: 300px;
+    right: 20px;
+    top: 20px;
+    background-color: rgba(0, 0, 0, .7);
+    border-radius: 10px;
+    padding: 10px 0;
+}
+
+#logo {
+    height: 35%;
+}
+
+@media (max-width: 1024px) {
+    .controlWrapper {
+        position: fixed;
+        width: 100%;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        background-color: rgba(0, 0, 0, .7);
+        border-radius: 0;
+        padding: 10px 0;
+    }
+}
+
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.semi-white {
+    color: #f0f0f0;
+}
+
+.col-xs-12 {
+    width: 100%;
+}
+
+.col-xs-12, .col-xs-3 {
+    float: left;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+button, select {
+    text-transform: none;
+}
+
+button, input, optgroup, select, textarea {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+}
+
+.cluster-icon {
+    background: url(../../../../Content/images/Polygons-01.svg);
+    text-rendering: geometricPrecision;
+    -webkit-tap-highlight-color: transparent;
+    border-collapse: collapse;
+    box-sizing: border-box;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    vertical-align: middle;
+    margin: 0;
+    font-size: 13px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, .3);
+    line-height: 45px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    user-select: none;
+    -webkit-user-drag: none;
+    display: block;
+    cursor: pointer;
+    pointer-events: auto;
+    margin-left: -22.5px;
+    margin-top: -22.5px;
+    width: 45px;
+    height: 45px;
+    transform: translate3d(5233px, -128px, 0px);
+    z-index: -128;
+}
