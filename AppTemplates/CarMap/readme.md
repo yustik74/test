@@ -5,7 +5,7 @@
   </a>
 
 <h3 align="center">Приложение для отображения уборочной техники</h3>
- 
+
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -27,7 +27,7 @@
 
 ## О проекте
 
-<img src="img/screen.png" alt="Пример" width="800" height="600">
+<img src="img/screen.png" alt="Пример" width="900" height="600">
 
 Данное приложение позволяет в онлайн-режиме наблюдать за группами транспорта на карте.
 
@@ -47,7 +47,12 @@
 
     <img src="img/adding-app.png" alt="Меню" width="800" height="600">
 
-4. Перезагрузите страницу и включите App в меню
+4. Если требуется, добавьте параметры ClusterSize (размер зоны в пикселях для группировки автомобилей), RefreshTime (
+   интервал обновления положений автомобилей в секундах), LogoUrl (путь к логотипу компании).
+
+   <img src="img/settings.png" alt="Меню" width="648" height="534">
+
+5. Перезагрузите страницу и включите App в меню
 
     <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
 
