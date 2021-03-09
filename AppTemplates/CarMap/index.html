@@ -24,6 +24,20 @@
             padding: 10px 0;
         }
 
+        @media (max-width: 768px) {
+            .controlWrapper {
+                position: fixed;
+                width: 100%;
+                top: auto;
+                right: auto;
+                left: 0px;
+                bottom: 0px;
+                background-color: rgba(0, 0, 0, .7);
+                border-radius: 0;
+                padding: 10px 0;
+            }
+        }
+
         .container-fluid {
             padding-right: 15px;
             padding-left: 15px;
@@ -52,6 +66,7 @@
     />
 </head>
 <body>
+<div style="position: fixed; width: 100%; height: 100%;" id="map"></div>
 <div class="controlWrapper" id="form">
     <div class="container-fluid">
         <div id="mainGroups">
@@ -81,25 +96,45 @@
         </div>
     </div>
 </div>
-<div id="map"></div>
 <script src="js/map.js"></script>
 <script src="js/treehelper.js"></script>
 <script>
-    var parm = window['external-settings'];
-    var onlineDevices = [];
-    var imagesPath = parm.Urls.App + "Content/cars/default/AG.NET/";
-    //var mapObject = InitMap('map', parm.Settings['ClusterSize']);
-    var bounds = [];
-    var currentGroupId;
-    var currentDevices = [];
-    var allDevices = [];
-    var mainGroupsViewModel;
-    var nestedGroupsViewModel;
-    var rootGroup;
+    const parm = window['external-settings'];
+    const imagesPath = parm.Urls.App + "Content/cars/default/AG.NET/";
+    let mapObject = InitMap('map', parm.Settings['ClusterSize']);
+    let bounds = [];
+
+    let currentGroupId; // ID текущей выбранной группы
+    let currentDevices = []; // устройства, отрисованные в данный момент
+    let rootGroup; // текущая рут-группа
+
+    let onlineDevices = []; // текущие устройства online
+    let allDevices = []; // все устройства в организации
+
+    let mainGroupsViewModel; //объекты для меню первого уровня
+    let nestedGroupsViewModel; //объекты для меню второго уровня
+
 
     updateOrganization().then((devices) => {
         allDevices = devices;
         rootGroup = devices.Groups.find(a => a.ParentID == null);
+        currentGroupId = rootGroup.ID;
+
+        updateL1Dropdown();
+        updateL2Dropdown();
+        updateDevices().then((online) => {
+            onlineDevices = online;
+            drawSubgroupDevices(onlineDevices);
+            mapObject.map.fitBounds(bounds);
+            let timeout = parm.Settings['RefreshTime'];
+            if (!!!timeout) timeout = 60;
+            setUpdateTimer(timeout);
+        });
+
+    });
+
+    function updateL1Dropdown()
+    {
         let rootGroups = [];
 
         rootGroups.push({
@@ -107,7 +142,7 @@
             ID: rootGroup.ID
         });
 
-        let rootGroupsArray = getChildFromGroups(rootGroup.ID);
+        let rootGroupsArray = getChildrenGroups(allDevices, rootGroup.ID);
         rootGroupsArray.forEach(function (group) {
             rootGroups.push(group);
         });
@@ -119,19 +154,7 @@
             onChange: onMainGroupChange
         });
         kendo.bind($("#mainGroups"), mainGroupsViewModel);
-
-        updateL2Dropdown(rootGroups[0].ID);
-        /*updateDevices().then((online) => {
-            onlineDevices = online;
-            console.log(onlineDevices);
-            drawDevices(onlineDevices, currentGroupId);
-            mapObject.map.fitBounds(bounds);
-        });*/
-    });
-
-    let timeout = parm.Settings['RefreshTime'];
-    if (!!!timeout) timeout = 60;
-    setUpdateTimer(timeout);
+    }
 
     function updateL2Dropdown() {
         let childGroups = [];
@@ -140,7 +163,7 @@
             Name: "Все машины"
         });
         if (mainGroupsViewModel.get('ID') != rootGroup.ID) {
-            let childGroupsArray = getChildFromGroups(mainGroupsViewModel.get('ID'));
+            let childGroupsArray = getChildrenGroups(allDevices, mainGroupsViewModel.get('ID'));
             childGroupsArray.forEach(function (group) {
                 childGroups.push(group);
             });
@@ -156,35 +179,36 @@
 
     function onMainGroupChange() {
         updateL2Dropdown();
+        currentGroupId = mainGroupsViewModel.get("ID");
+        drawSubgroupDevices(onlineDevices);
+        mapObject.map.fitBounds(bounds);
     }
 
     function onGroupChange() {
-        alert('event!');
+        currentGroupId = nestedGroupsViewModel.get("ID");
+        drawSubgroupDevices(onlineDevices);
+        mapObject.map.fitBounds(bounds);
     }
 
-    function getChildFromGroups(parentID) {
-        let result = [];
-        allDevices.Groups.filter(a => a.ParentID == parentID)
-            .map(item => {
-                return {Name: item.Name, ID: item.ID}
-            }).forEach(function (item) {
-            result.push(item);
+    function drawSubgroupDevices(devices, groupID) {
+        if (!!!groupID)
+            groupID = currentGroupId;
+        let children = getChildren(allDevices, groupID);
+        let childrenToDraw = [];
+        children.forEach(function (device) {
+            let found = devices.find(a => a.Name == device.Name);
+            if (!!found) {
+                childrenToDraw.push(found);
+            }
         });
-        return result;
-    }
-
-    function filterDevices(groupID, devices) {
-        if (!!!groupID) {
-            return devices;
-        } else {
-            return getChilds(devices, groupID);
-        }
+        drawDevices(childrenToDraw);
     }
 
     function drawDevices(onlineDevices) {
         let removeDevices = [];
         let newDevices = [];
         let changedDevices = [];
+        //собираем, какие устройства изменились, а какие - новые
         onlineDevices.forEach(function (device) {
             let found = currentDevices.find(a => a.Name == device.Name);
             if (!!found) {
@@ -198,24 +222,27 @@
                 });
             }
         });
+        //собираем, какие устройства пропали из отрисовки
         currentDevices.forEach(function (device) {
             let found = onlineDevices.find(a => a.Name == device.Name);
             if (!!!found)
                 removeDevices.push(device);
         });
+        //удаляем устаревшие устройства
         removeDevices.forEach(function (device) {
             mapObject.devicesLayer.removeLayer(device.Marker);
             currentDevices.splice(currentDevices.indexOf(device), 1);
         });
+        //добавляем маркеры на карту у новых устройств
         newDevices.forEach(function (device) {
             mapObject.devicesLayer.addLayer(device.Marker);
             currentDevices.push({Name: device.Name, Marker: device.Marker, LastPosition: device.LastPosition});
         });
+        //сдвигаем маркер для обновившихся устройств
         changedDevices.forEach(function (device) {
-            device.Marker.slideTo([device.LastPosition.Lat, device.LastPosition.Lng], {
-                duration: 500,
-            });
+            device.Marker.setLatLng([device.LastPosition.Lat, device.LastPosition.Lng],);
         });
+        //добавляем координаты для позиционирования карты
         bounds = [];
         onlineDevices.forEach(item => {
             bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
@@ -239,35 +266,21 @@
             $.get({
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
-                    console.log(onlineInfoAll);
-                    let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1]).map(item => {
+                    let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1] && !!a[1].LastPosition).map(item => {
                         return {
                             LastPosition: item[1].LastPosition,
                             Name: item[1].Name,
                             Course: item[1].Course,
                             State: item[1].State,
                             Speed: item[1].Speed,
-                            Image: allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]).Image
+                            DeviceInfo: allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]),
+                            ID: item[0]
                         }
                     });
                     resolve(online);
                 }
             });
         });
-    }
-
-    function createMarker(item) {
-        let carIcon;
-        if (!!item.Image) {
-            carIcon = L.icon({
-                iconUrl: imagesPath + item.Image,
-                iconSize: [32, 32],
-                popupAnchor: [-3, -76],
-            });
-        }
-        let marker = !!carIcon ? L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {icon: carIcon}) : L.marker([item.LastPosition.Lat, item.LastPosition.Lng]);
-        marker.bindPopup(item.Name + "<br>Скорость: " + item.Speed + "<br>Состояние: " + getStateName(item.State));
-        return marker;
     }
 
     function getStateName(state) {
@@ -285,8 +298,12 @@
 
     function setUpdateTimer(timeoutSeconds) {
         setInterval(() => {
-            updateDevices().then((result) => drawDevices(result, currentGroupId))
-        }, timeoutSeconds * 1000);
+                updateDevices().then((result) => {
+                    onlineDevices = result;
+                    drawSubgroupDevices(result, currentGroupId);
+                });
+            },
+            timeoutSeconds * 1000);
     }
 </script>
 </body>
