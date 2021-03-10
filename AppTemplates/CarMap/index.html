@@ -307,8 +307,8 @@
     }
 
     function round(value, digits = 2) {
-        var multiplier = 1;
-        for (var counter = 0; counter < digits; counter++)
+        let multiplier = 1;
+        for (let counter = 0; counter < digits; counter++)
             multiplier *= 10;
         return Math.round((value) * multiplier) / multiplier;
     }
