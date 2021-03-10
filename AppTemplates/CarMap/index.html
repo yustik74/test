@@ -291,7 +291,6 @@
                             LastPosition: item[1].LastPosition,
                             Name: item[1].Name,
                             Course: item[1].Course,
-                            State: item[1].State,
                             Speed: item[1].Speed,
                             DeviceInfo: allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]),
                             ID: item[0]
@@ -303,17 +302,8 @@
         });
     }
 
-    function getStateName(state) {
-        switch (state) {
-            case 0:
-                return "Остановка";
-            case 0:
-                return "Движение";
-            case 0:
-                return "Полет";
-            default:
-                return "Неизвестно";
-        }
+    function getStateName(speed) {
+        return speed > 0 ? 'Движение' : 'Остановка';
     }
 
     function round(value, digits = 2) {

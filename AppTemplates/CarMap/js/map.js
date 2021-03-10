@@ -39,6 +39,6 @@ function createMarker(item) {
         });
     }
     let marker = !!carIcon ? L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {icon: carIcon}) : L.marker([item.LastPosition.Lat, item.LastPosition.Lng]);
-    marker.bindPopup(item.Name + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.State));
+    marker.bindPopup(item.Name + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed));
     return marker;
 }
