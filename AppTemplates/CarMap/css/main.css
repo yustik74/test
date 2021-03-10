@@ -14,9 +14,10 @@ html, body, #map {
     width: 300px;
     right: 20px;
     top: 20px;
-    background-color: rgba(0, 0, 0, .7);
+    background-color: rgba(0, 0, 0, .75);
     border-radius: 10px;
     padding: 10px 0;
+    height: 230px;
 }
 
 #logo {
@@ -30,9 +31,18 @@ html, body, #map {
         top: 0px;
         left: 0px;
         right: 0px;
-        background-color: rgba(0, 0, 0, .7);
+        background-color: rgba(0, 0, 0, .75);
         border-radius: 0;
-        padding: 10px 0;
+        padding: 5px 0;
+        height: 230px;
+    }
+
+    .container {
+        padding-right: 5px;
+        padding-left: 5px;
+        margin-right: auto;
+        margin-left: auto;
+        height: 30%;
     }
 }
 
