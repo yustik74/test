@@ -30,15 +30,11 @@ function setDeviceMarker(marker, deviceInfo) {
 }
 
 function createMarker(item) {
-    let carIcon;
-    if (!!item.DeviceInfo.Image) {
-        carIcon = L.icon({
-            iconUrl: imagesPath + item.DeviceInfo.Image,
+    let carIcon = L.icon({
+            iconUrl: iconPath,
             iconSize: [32, 32],
-            popupAnchor: [-3, -76],
-        });
-    }
-    let marker = !!carIcon ? L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {icon: carIcon}) : L.marker([item.LastPosition.Lat, item.LastPosition.Lng]);
+            popupAnchor: [-3, -76],});
+    let marker = L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {icon: carIcon, rotationAngle: item.Course, rotationOrigin: "center center"});
     marker.bindPopup(item.Name + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed));
     return marker;
 }
