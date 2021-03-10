@@ -115,7 +115,7 @@
 
     let onlineDevices = []; // текущие устройства online
     let allDevices = []; // все устройства в организации
-
+    let allDevicesWithPlates;
     let mainGroupsViewModel; //объекты для меню первого уровня
     let nestedGroupsViewModel; //объекты для меню второго уровня
     let statsViewModel;
@@ -125,6 +125,9 @@
 
     updateOrganization().then((devices) => {
         allDevices = devices;
+        allDevicesWithPlates = allDevices.Items.filter(a => !!a && !!a.Properties && !!a.Properties.find(b => b.Name == "VehicleRegNumber"));
+        // && !!a.Properties
+        // && !!a.Properties.find(b => b.Name == "VehicleRegNumber")
         rootGroup = devices.Groups.find(a => a.ParentID == null);
         currentGroupId = rootGroup.ID;
 
@@ -242,7 +245,8 @@
                     Name: device.Name,
                     LastPosition: device.LastPosition,
                     Course: device.Course,
-                    Speed: device.Speed
+                    Speed: device.Speed,
+                    Plate: device.Plate
                 };
                 newDev.Marker = createMarker(newDev);
                 newDevices.push(newDev);
@@ -268,7 +272,8 @@
                 Marker: device.Marker,
                 LastPosition: device.LastPosition,
                 Course: device.Course,
-                Speed: device.Speed
+                Speed: device.Speed,
+                Plate: device.Plate
             });
         });
         //сдвигаем маркер для обновившихся устройств
@@ -301,13 +306,17 @@
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
                     let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1] && !!a[1].LastPosition).map(item => {
+                        let plateNumber = allDevicesWithPlates.find(b => b.ID == item[0]).Properties.find(a => a.Name == "VehicleRegNumber").Value;
+                        if (plateNumber == 'undefined')
+                            plateNumber = "";
                         return {
                             LastPosition: item[1].LastPosition,
                             Name: item[1].Name,
                             Course: item[1].Course,
                             Speed: item[1].Speed,
-                            DeviceInfo: allDevices.Items.filter(a => !!a).find(a => a.ID == item[0]),
-                            ID: item[0]
+                            DeviceInfo: allDevices.Items.find(a => a.ID == item[0]),
+                            ID: item[0],
+                            Plate: plateNumber
                         }
                     });
                     resolve(online);
