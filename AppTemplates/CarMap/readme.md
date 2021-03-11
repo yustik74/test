@@ -54,7 +54,11 @@
 
 5. Перезагрузите страницу и включите App в меню
 
-    <img src="img/app-in-menu.png" alt="Меню" width="800" height="600">
+    <img src="img/app-in-menu.png" alt="Меню" width="300" height="255">
+
+   или на панели инструментов.
+
+   <img src="img/app-on-panel.png" alt="Меню" width="300" height="225">
 
 <!-- USAGE EXAMPLES -->
 
