@@ -1,6 +1,6 @@
 function InitMap(id, maxClusterRadius) {
     let mapObject = Object();
-    mapObject.map = L.map(id).setView([51.505, -0.09], 13);
+    mapObject.map = L.map(id).setView([55.173702, 61.383591], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
@@ -33,13 +33,17 @@ function createMarker(item) {
     let carIcon = L.icon({
         iconUrl: iconPath,
         iconSize: [32, 32],
-        popupAnchor: [-3, -76],
+        popupAnchor: [-3, -16],
     });
-    let marker = L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {
+    let lat = item.LastPosition.Lat;
+    let lng = item.LastPosition.Lng;
+    let marker = L.marker([lat, lng], {
         icon: carIcon,
         rotationAngle: item.Course,
         rotationOrigin: "center center"
     });
-    marker.bindPopup(item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed));
+    let info = item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed) + "<br>Направление: " + round(item.Course, 0) + "°<br>Последняя активность: " + calculateTimeDifference(item.LastTime);
+    marker.bindPopup(info);
+    marker.bindTooltip(info);
     return marker;
 }

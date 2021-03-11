@@ -119,6 +119,7 @@
     let mainGroupsViewModel; //объекты для меню первого уровня
     let nestedGroupsViewModel; //объекты для меню второго уровня
     let statsViewModel;
+    let currentGroupDevicesList = [];
 
     let timeout = parm.Settings['RefreshTime'];
     if (!!!timeout) timeout = 60;
@@ -134,9 +135,11 @@
         updateL1Dropdown();
         updateL2Dropdown();
         updateDevices().then((online) => {
+            updateGroupList(currentGroupId);
             onlineDevices = online;
             drawSubgroupDevices(onlineDevices);
-            mapObject.map.fitBounds(bounds);
+            if (bounds.length > 0)
+                mapObject.map.fitBounds(bounds);
             setUpdateTimer(timeout);
         });
         initStats();
@@ -201,6 +204,7 @@
     function onMainGroupChange() {
         updateL2Dropdown();
         currentGroupId = mainGroupsViewModel.get("ID");
+        updateGroupList(currentGroupId);
         drawSubgroupDevices(onlineDevices);
         if (bounds.length > 0)
             mapObject.map.fitBounds(bounds);
@@ -208,24 +212,28 @@
 
     function onGroupChange() {
         currentGroupId = nestedGroupsViewModel.get("ID");
+        updateGroupList(currentGroupId);
         drawSubgroupDevices(onlineDevices);
         if (bounds.length > 0)
             mapObject.map.fitBounds(bounds);
     }
 
-    function drawSubgroupDevices(devices, groupID) {
+    function updateGroupList(groupID) {
         if (!!!groupID)
             groupID = currentGroupId;
-        let children = getChildren(allDevices, groupID);
+        currentGroupDevicesList = getChildren(allDevices, groupID);
+    }
+
+    function drawSubgroupDevices(devices) {
         let childrenToDraw = [];
-        children.forEach(function (device) {
+        currentGroupDevicesList.forEach(function (device) {
             let found = devices.find(a => a.ID == device.ID);
             if (!!found) {
                 childrenToDraw.push(found);
             }
         });
         statsViewModel.set('carsInGroupOnline', childrenToDraw.length);
-        statsViewModel.set('totalCarsInGroup', children.length);
+        statsViewModel.set('totalCarsInGroup', currentGroupDevicesList.length);
         drawDevices(childrenToDraw);
     }
 
@@ -246,7 +254,8 @@
                     LastPosition: device.LastPosition,
                     Course: device.Course,
                     Speed: device.Speed,
-                    Plate: device.Plate
+                    Plate: device.Plate,
+                    LastTime: device.LastTime
                 };
                 newDev.Marker = createMarker(newDev);
                 newDevices.push(newDev);
@@ -266,19 +275,11 @@
         //добавляем маркеры на карту у новых устройств
         newDevices.forEach(function (device) {
             mapObject.devicesLayer.addLayer(device.Marker);
-            currentDevices.push({
-                ID: device.ID,
-                Name: device.Name,
-                Marker: device.Marker,
-                LastPosition: device.LastPosition,
-                Course: device.Course,
-                Speed: device.Speed,
-                Plate: device.Plate
-            });
+            currentDevices.push(device);
         });
         //сдвигаем маркер для обновившихся устройств
         changedDevices.forEach(function (device) {
-            device.Marker.setLatLng([device.LastPosition.Lat, device.LastPosition.Lng],);
+            device.Marker.setLatLng([device.LastPosition.Lat, device.LastPosition.Lng]);
             device.Marker.setRotationAngle(device.Course);
         });
         //добавляем координаты для позиционирования карты
@@ -306,8 +307,11 @@
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
                     let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1] && !!a[1].LastPosition).map(item => {
-                        let plateNumber = allDevicesWithPlates.find(b => b.ID == item[0]).Properties.find(a => a.Name == "VehicleRegNumber").Value;
-                        if (plateNumber == 'undefined')
+                        let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
+                        let plateNumber;
+                        if (!!deviceInfo)
+                            plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
+                        else
                             plateNumber = "";
                         return {
                             LastPosition: item[1].LastPosition,
@@ -316,7 +320,8 @@
                             Speed: item[1].Speed,
                             DeviceInfo: allDevices.Items.find(a => a.ID == item[0]),
                             ID: item[0],
-                            Plate: plateNumber
+                            Plate: plateNumber,
+                            LastTime: item[1]._LastData
                         }
                     });
                     resolve(online);
@@ -337,13 +342,35 @@
     }
 
     function setUpdateTimer(timeoutSeconds) {
-        setInterval(() => {
-                updateDevices().then((result) => {
-                    onlineDevices = result;
-                    drawSubgroupDevices(result, currentGroupId);
-                });
-            },
-            timeoutSeconds * 1000);
+        setTimeout(() => {
+            updateByTimeout(timeoutSeconds);
+        }, timeoutSeconds * 1000, timeoutSeconds);
+    }
+
+    function updateByTimeout(timeoutSeconds) {
+        new Promise((resolve) => {
+            updateDevices().then((result) => {
+                onlineDevices = result;
+                drawSubgroupDevices(result);
+                resolve();
+            })
+        }).then(() => {
+            setTimeout(() => {
+                updateByTimeout(timeoutSeconds);
+            }, timeoutSeconds * 1000, timeoutSeconds);
+        });
+    }
+
+    function calculateTimeDifference(oldDate) {
+        let currentDate = new Date();
+        let difference = (currentDate - new Date(oldDate)) / 1000;
+        if (difference < 60)
+            return "<1 min";
+        else if (difference < 3600)
+            return ">" + round(difference / 60, 0) + " min";
+        else if (difference < 86400)
+            return ">" + round(difference / 3600, 0) + " h";
+        else return ">" + round(difference / 86400, 0) + " d";
     }
 </script>
 </body>
