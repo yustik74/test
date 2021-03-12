@@ -55,7 +55,7 @@
 
    или на панели инструментов.
 
-   <img src="img/app-on-panel.png" alt="Меню" width="2711" height="71">
+   <img src="img/app-on-panel.png" alt="Меню" width="271" height="71">
 
 <!-- USAGE EXAMPLES -->
 
