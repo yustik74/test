@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Мониторинг коммунальных машин</title>
+    <style>
+        body, html { width:100% ;
+            height:100% ;
+            overflow:hidden ;
+        }
+
+        iframe { width:100% ;
+            height:100% ;
+            border:none ;
+        }
+    </style>
+    <link rel="shortcut icon" href="img/favicon.ico">
+</head>
+<body>
+<script src="parameters.js"></script>
+<script>
+    var ifrm = document.createElement("iframe");
+    ifrm.setAttribute("src", source);
+    document.body.appendChild(ifrm);
+</script>
+</body>
+</html>
