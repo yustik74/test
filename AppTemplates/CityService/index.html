@@ -316,7 +316,7 @@
                     ).map(item => {
                         let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
                         let plateNumber;
-                        if (!!item[1].Final.AppCityServiceVisible && item[1].Final.AppCityServiceVisible != "00000000-0000-0000-0000-000000000000")
+                        if (item[1].Final.AppCityServiceVisible == false)
                             return null;
                         if (!!deviceInfo) {
                             plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
