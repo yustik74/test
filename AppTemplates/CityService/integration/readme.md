@@ -47,7 +47,7 @@
 
 4. Откройте App в отдельном окне.
 
-   <img src="img/user-settings.png" alt="Открыть App" width="818" height="167">
+   <img src="img/run-app.png" alt="Открыть App" width="818" height="167">
 
 5. Скопируйте адрес страницы и сохраните его в файл parameters.js
 
