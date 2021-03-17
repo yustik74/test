@@ -354,7 +354,7 @@
                 drawSubgroupDevices(result);
                 resolve();
             })
-        }).then(() => {
+        }).finally(() => {
             setTimeout(() => {
                 updateByTimeout(timeoutSeconds);
             }, timeoutSeconds * 1000, timeoutSeconds);
