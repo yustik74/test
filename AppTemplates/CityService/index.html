@@ -316,13 +316,11 @@
                     ).map(item => {
                         let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
                         let plateNumber;
+                        if (!!item[1].Final.AppCityServiceVisible && item[1].Final.AppCityServiceVisible != "00000000-0000-0000-0000-000000000000")
+                            return null;
                         if (!!deviceInfo) {
-                            let cityServiceVisible = deviceInfo.Properties.find(prop => prop.Name == 'CityServiceVisible');
-                            if (!!cityServiceVisible && !cityServiceVisible.Value)
-                                return null;
                             plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
-                        }
-                        else
+                        } else
                             plateNumber = "";
                         return {
                             LastPosition: item[1].LastPosition,
