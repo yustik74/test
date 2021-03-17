@@ -316,7 +316,7 @@
                         let plateNumber;
                         if (!!deviceInfo) {
                             let cityServiceVisible = deviceInfo.Properties.find(prop => prop.Name == 'CityServiceVisible');
-                            if (!!cityServiceVisible && cityServiceVisible.Value != "true")
+                            if (!!cityServiceVisible && !cityServiceVisible.Value)
                                 return null;
                             plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
                         }
