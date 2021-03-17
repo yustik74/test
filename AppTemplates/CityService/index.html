@@ -308,13 +308,18 @@
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
                     let online = Object.entries(onlineInfoAll).filter(a => !!a
-                            && !!a[1]
-                            && !!a[1].LastPosition
-                            && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout).map(item => {
+                        && !!a[1]
+                        && !!a[1].LastPosition
+                        && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout
+                    ).map(item => {
                         let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
                         let plateNumber;
-                        if (!!deviceInfo)
+                        if (!!deviceInfo) {
+                            let cityServiceVisible = deviceInfo.Properties.find(prop => prop.Name == 'CityServiceVisible');
+                            if (!!cityServiceVisible && cityServiceVisible.Value != "true")
+                                return null;
                             plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
+                        }
                         else
                             plateNumber = "";
                         return {
@@ -328,7 +333,7 @@
                             LastTime: item[1]._LastData
                         }
                     });
-                    resolve(online);
+                    resolve(online.filter(a => !!a));
                 }
             });
         });
