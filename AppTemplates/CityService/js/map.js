@@ -42,7 +42,7 @@ function createMarker(item) {
         rotationAngle: item.Course,
         rotationOrigin: "center center"
     });
-    let info = item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed) + "<br>Последняя активность: " + calculateTimeDifference(item.LastTime);
+    let info = item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed) + "<br>Последняя активность: " + getTimeDifferenceString(item.LastTime);
     marker.bindPopup(info);
     marker.bindTooltip(info);
     return marker;

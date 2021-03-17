@@ -124,11 +124,12 @@
     let timeout = parm.Settings['RefreshTime'];
     if (!!!timeout) timeout = 60;
 
+    let outdatedTimeout = parm.Settings['OutdatedTimeout'];
+    if (!!!outdatedTimeout)
+        outdatedTimeout = 60 * 24 * 365 * 10; //10 years
     updateOrganization().then((devices) => {
         allDevices = devices;
         allDevicesWithPlates = allDevices.Items.filter(a => !!a && !!a.Properties && !!a.Properties.find(b => b.Name == "VehicleRegNumber"));
-        // && !!a.Properties
-        // && !!a.Properties.find(b => b.Name == "VehicleRegNumber")
         rootGroup = devices.Groups.find(a => a.ParentID == null);
         currentGroupId = rootGroup.ID;
 
@@ -306,7 +307,10 @@
             $.get({
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
-                    let online = Object.entries(onlineInfoAll).filter(a => !!a && !!a[1] && !!a[1].LastPosition).map(item => {
+                    let online = Object.entries(onlineInfoAll).filter(a => !!a
+                            && !!a[1]
+                            && !!a[1].LastPosition
+                            && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout).map(item => {
                         let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
                         let plateNumber;
                         if (!!deviceInfo)
@@ -361,16 +365,20 @@
         });
     }
 
-    function calculateTimeDifference(oldDate) {
+    function getTimeDifferenceInSeconds(oldDate) {
         let currentDate = new Date();
-        let difference = (currentDate - new Date(oldDate)) / 1000;
+        return (currentDate - new Date(oldDate)) / 1000;
+    }
+
+    function getTimeDifferenceString(oldDate) {
+        let difference = getTimeDifferenceInSeconds(oldDate);
         if (difference < 60)
             return "<1 min";
         else if (difference < 3600)
-            return ">" + round(difference / 60, 0) + " min";
+            return round(difference / 60, 0) + " min";
         else if (difference < 86400)
-            return ">" + round(difference / 3600, 0) + " h";
-        else return ">" + round(difference / 86400, 0) + " d";
+            return round(difference / 3600, 0) + " h";
+        else return round(difference / 86400, 0) + " d";
     }
 </script>
 </body>

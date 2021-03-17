@@ -7,7 +7,7 @@ function getChildren(array, parent) {
         groups.push(childGroup);
     });
     //собираем все дочерние группы
-    getChildrenGroups(array, parent).forEach(function (childGroup) {
+    getAllChildrenGroups(array, parent).forEach(function (childGroup) {
         groups.push(childGroup);
     });
     //для каждой группы собираем все дочерние элементы
@@ -17,6 +17,19 @@ function getChildren(array, parent) {
         });
     });
     return result;
+}
+
+function getAllChildrenGroups(array, parentID)
+{
+    let groups = [];
+    array.Groups.filter(a => a.ParentID == parentID).forEach(function (group)
+    {
+       groups.push(group);
+       getChildrenGroups(array, group.ID).forEach(function (childGroup){
+          groups.push(childGroup);
+       });
+    });
+    return groups;
 }
 
 function getChildrenItemsFromGroup(array, parent) {
