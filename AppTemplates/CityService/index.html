@@ -98,7 +98,9 @@
 </div>
 <script>
     const parm = window['external-settings'];
-    const iconPath = parm.Urls.Content + "/img/arrow.png";
+    let iconPath = parm.Urls.Content + "/img/arrow.png";
+    if (!!parm.Settings['CustomIcon'])
+        iconPath = parm.Urls.App + parm.Settings['CustomIcon'];
     let mapObject = InitMap('map', parm.Settings['ClusterSize']);
     let bounds = [];
 
