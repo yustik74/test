@@ -4,7 +4,7 @@
     <img src="img/logo_TK_big_ru.png" alt="Logo" width="133" height="29">
   </a>
 
-<h3 align="center">Приложение для отображения городской коммунальной техники</h3>
+<h3 align="center">Инструкция по интеграции приложения на сайт</h3>
 
 
 <!-- TABLE OF CONTENTS -->
@@ -56,8 +56,6 @@
    или на панели инструментов.
 
    <img src="img/app-on-panel.png" alt="Меню" width="271" height="71">
-
-5. Для интеграции на сайт воспользуйтесь <a href="integration/readme.md">инструкцией</a>.
 
 <!-- USAGE EXAMPLES -->
 
