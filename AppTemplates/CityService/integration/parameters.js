@@ -1,1 +1,1 @@
-var source = "http://tomilin-pc.tk-chel.ru/App/Index/CityService-40";
+var source = "вставьте путь к вашей странице сюда";

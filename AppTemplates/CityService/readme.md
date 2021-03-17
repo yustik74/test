@@ -27,7 +27,7 @@
 
 ## О проекте
 
-<img src="img/screen.png" alt="Пример" width="900" height="600">
+<img src="img/screen.png" alt="Скриншот приложения" width="900" height="600">
 
 Данное приложение позволяет в онлайн-режиме наблюдать за группами транспорта на карте.
 
@@ -41,7 +41,7 @@
 
 2. Зайдите в Apps
 
-    <img src="img/menu-apps.png" alt="Меню" width="800" height="600">
+    <img src="img/menu-apps.png" alt="Apps windows" width="800" height="600">
 
 3. Добавьте новый App, уделив внимание выделенному полю (Шаблон - название директории, в которой находится приложение).
    Если требуется, добавьте параметры ClusterSize (размер зоны в пикселях для группировки автомобилей), RefreshTime (
@@ -51,11 +51,11 @@
 
 4. Перезагрузите страницу и включите App в меню
 
-    <img src="img/app-in-menu.png" alt="Меню" width="300" height="255">
+    <img src="img/app-in-menu.png" alt="App в меню" width="300" height="255">
 
    или на панели инструментов.
 
-   <img src="img/app-on-panel.png" alt="Меню" width="271" height="71">
+   <img src="img/app-on-panel.png" alt="App на панели инструментов" width="271" height="71">
 
 5. Для интеграции на сайт воспользуйтесь <a href="integration/readme.md">инструкцией</a>.
 
