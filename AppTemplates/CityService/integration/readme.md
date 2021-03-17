@@ -1,7 +1,7 @@
 <br />
 <p align="center">
   <a href="https://www.tk-nav.ru/">
-    <img src="img/logo_TK_big_ru.png" alt="Logo" width="133" height="29">
+    <img src="../img/logo_TK_big_ru.png" alt="Logo" width="133" height="29">
   </a>
 
 <h3 align="center">Инструкция по интеграции приложения на сайт</h3>
