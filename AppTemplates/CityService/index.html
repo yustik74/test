@@ -312,6 +312,7 @@
                     let online = Object.entries(onlineInfoAll).filter(a => !!a
                         && !!a[1]
                         && !!a[1].LastPosition
+                        && !!a[1]._LastCoords
                         && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout
                     ).map(item => {
                         let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
