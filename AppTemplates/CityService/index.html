@@ -276,7 +276,7 @@
                     LastTime: device.LastTime,
                     IconPath: device.IconPath,
                 };
-                createCursor(newDev).then(function (marker)
+                createMarker(newDev).then(function (marker)
                 {
                     newDev.Marker = marker;
                     mapObject.devicesLayer.addLayer(newDev.Marker);
@@ -288,12 +288,16 @@
         currentDevices.forEach(function (device) {
             let found = onlineDevices.find(a => a.ID == device.ID);
             if (!!!found)
+            {
+                mapObject.devicesLayer.removeLayer(device.Marker);
+                currentDevices.splice(currentDevices.indexOf(device), 1);
                 removeDevices.push(device);
+            }
         });
         //удаляем устаревшие устройства
         removeDevices.forEach(function (device) {
-            mapObject.devicesLayer.removeLayer(device.Marker);
-            currentDevices.splice(currentDevices.indexOf(device), 1);
+            //mapObject.devicesLayer.removeLayer(device.Marker);
+            //currentDevices.splice(currentDevices.indexOf(device), 1);
         });
         //сдвигаем маркер для обновившихся устройств
         changedDevices.forEach(function (device) {

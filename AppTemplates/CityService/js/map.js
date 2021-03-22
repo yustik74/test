@@ -31,22 +31,7 @@ function InitMap(id, maxClusterRadius) {
     return mapObject;
 }
 
-const CanvasMarker = L.CircleMarker.extend({
-    _updatePath() {
-        if (!this.options.img.el) { //Создаем элемент IMG
-            const img = document.createElement('img');
-            img.src = this.options.img.url;
-            this.options.img.el = img;
-            img.onload = () => {
-                this.redraw();  //После загрузки запускаем перерисовку
-            };
-        } else {
-            this._renderer._updateImg(this);    //Вызываем _updateImg
-        }
-    },
-});
-
-function createCursor(item) {
+function createMarker(item) {
     return new Promise((resolve) => {
         let info = item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed) + "<br>Последняя активность: " + getTimeDifferenceString(item.LastTime);
         item.Alias = info;
@@ -62,7 +47,8 @@ function createCursor(item) {
         if (drawCursor & drawIcon) {
             markerType = 2;
         }
-        getArrowCursor(item, cursorColor, markerType).then(function (image) {
+        getArrowCursor(item, cursorColor, markerType, 16).then(function (image) {
+            console.log(image.image);
             let marker = L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {
                 icon: L.icon({
                     iconUrl: image.image,
@@ -82,8 +68,6 @@ function calculateMarkerSize(markerType, borderWidth, labelHeight, labelMargin, 
         1 - только курсор
         2 - иконка и курсор
         */
-    let yPos = 0,
-        xStart = 0;
     if (markerType == 0) {
         markerWidth = boubleWidth + borderWidth;
         markerHeight = labelHeight + labelMargin + boubleHeight + borderWidth;
@@ -124,115 +108,69 @@ function calculateMarkerSize(markerType, borderWidth, labelHeight, labelMargin, 
     };
 }
 
-function redrawMarkers() {
-    currentDevices.map(a => {
-        return a.Marker
-    }).forEach(function (marker) {
-        //marker.redraw();
-    });
-}
-
-function getArrowCursor(car, cursorColor, markerType) {
+function getArrowCursor(car, cursorColor, markerType, r) {
     return new Promise((resolve) => {
-        let carImageSize = window.devicePixelRatio > 1 ? 40 : 32,
-            carArrowSize = 36 * 0.8,
-            carArrowSizeMax = Math.ceil(Math.sqrt(2 * Math.pow(carArrowSize, 2))), // Max arrow size on rotate
-            markerWidth = 0,
-            markerHeight = 0,
-            boubleWidth = carImageSize + 6,
-            boubleHeight = boubleWidth * 1.5,
-            boubleRoundSize = 4,
-            boubleArrowSize = carImageSize / 2.5,
-            boubleBg = "rgba(255,255,255,.75)",
-            borderColor = "#cccccc",
-            borderWidth = 1,
-            labelFontSize = window.devicePixelRatio > 1 ? 12 : 11,
-            labelFont = labelFontSize + "px " + "'Roboto Condensed'",//getComputedStyle(document.body).fontFamily,
-            labelMargin = markerType == 1 || !car.showLabel ? 0 : 1,
-            labelPadding = 4,
-            labelItemsCount = 1,
-            labelSpace = 1,
-            labelWidth = 0,
-            labelHeight = car.showLabel ? labelFontSize + labelPadding + labelPadding / 2 + (labelItemsCount - 1) * labelSpace : 0,
-            labelColor = "#222222",
-            labelBg = "#ffffff";
-        let markerSize = calculateMarkerSize(markerType, borderWidth, labelHeight, labelMargin, boubleWidth, boubleHeight, carArrowSizeMax);
-
+        let lineWidth = r / 1.5;
+        let arrowLedge = r / 3 * 2.5;
+        let arrowDegrees = 45;
+        let degreesL = calculateRadian(270 + arrowDegrees);
+        let degreesR = calculateRadian(270 - arrowDegrees);
+        let centerPoint = r + arrowLedge;
         let resultCanvas = document.createElement('canvas');
         resultCanvas.setAttribute('id', 'marker-icon-marker');
-        resultCanvas.width = markerSize.markerWidth;
-        resultCanvas.height = markerSize.markerHeight;
-        let ctxResult = resultCanvas.getContext('2d');
+        resultCanvas.width = (r + arrowLedge) * 2;
+        resultCanvas.height = (r + arrowLedge) * 2;
+        let context = resultCanvas.getContext('2d');
+        context.translate(centerPoint, centerPoint);
+        context.rotate(calculateRadian(car.Course));
+        let markerSize = {xPos: centerPoint, yPos: centerPoint};
 
-        let canvasMarker = document.createElement('canvas');
-        canvasMarker.setAttribute('id', 'marker-icon-marker');
-        canvasMarker.width = markerSize.markerWidth;
-        canvasMarker.height = markerSize.markerHeight;
-        let ctxMarker = canvasMarker.getContext('2d');
+        let rightPointR = {
+            X: r * Math.cos(degreesL),
+            Y: r * Math.sin(degreesL)
+        };
+        let leftPointR = {
+            X: r * Math.cos(degreesR),
+            Y: r * Math.sin(degreesR)
+        };
 
         if (markerType == 1 || markerType == 2) {
-            let x = Math.max(carArrowSizeMax, boubleWidth) / 2,
-                y = canvasMarker.height - carArrowSizeMax / 2;
-
-            if (car.Course == -1) {
-                this.drawPosition(ctxMarker, x, y, carArrowSize / 2, '#' + cursorColor);
-            } else {
-                const borderWidth = 2;
-                const size = carArrowSize - borderWidth * 2;
-
-                ctxMarker.setTransform(1, 0, 0, 1, 0, 0);
-                ctxMarker.save();
-                ctxMarker.translate(x, y);
-                ctxMarker.rotate(car.Course * Math.PI / 180);
-                ctxMarker.translate(-size / 2, -size / 2);
-                drawArrow(ctxMarker, size, '#' + cursorColor, borderWidth, '#000');
-                ctxMarker.restore();
-            }
-            ctxResult.drawImage(canvasMarker, 0, 0);
+            context.beginPath();
+            context.arc(0, 0, r, 0, 2 * Math.PI, false);
+            context.lineWidth = lineWidth;
+            context.strokeStyle = '#000280';
+            context.stroke();
+            context.fillStyle = '#ffffff';
+            context.fill();
+            context.closePath();
+            context.beginPath();
+            context.fillStyle = '#000280';
+            context.lineWidth = 0;
+            context.moveTo(0, -r - arrowLedge);
+            context.lineTo(leftPointR.X, leftPointR.Y - lineWidth / 2);
+            context.lineTo(rightPointR.X, rightPointR.Y - lineWidth / 2);
+            context.lineTo(0, -r - arrowLedge);
+            context.fill();
+            context.closePath();
         }
 
         if (markerType == 0 || markerType == 2) {
             new Promise((resolve, reject) => {
-                let labelElement = document.createElement('canvas');
-                labelElement.setAttribute('id', 'marker-icon-label');
-                labelElement.width = markerSize.markerWidth;
-                labelElement.height = markerSize.markerHeight;
-                let ctxLabel = labelElement.getContext('2d');
-                ctxLabel.setTransform(1, 0, 0, 1, 0, 0);
-                ctxLabel.translate(markerSize.xStart, 0);
-                ctxLabel.beginPath();
-                ctxLabel.strokeStyle = borderColor;
-                ctxLabel.lineWidth = borderWidth;
-                ctxLabel.fillStyle = boubleBg;
-                this.drawBorder(ctxLabel, boubleWidth, boubleWidth, boubleRoundSize, boubleArrowSize);
-                ctxLabel.fill();
-                this.drawBorder(ctxLabel, boubleWidth, boubleWidth, boubleRoundSize, boubleArrowSize);
-                ctxLabel.stroke();
-
-                if (!cache.cars[car.image]) {
+                if (!cache.cars[car.IconPath]) {
                     let carImage = new Image();
                     carImage.src = car.IconPath;
                     carImage.onload = function () {
-                        let width = carImageSize,
-                            height = carImageSize * carImage.height / carImage.width;
-                        ctxLabel.setTransform(1, 0, 0, 1, 0, 0);
-                        ctxLabel.drawImage(carImage, markerSize.xStart + (boubleWidth - width) / 2, (boubleWidth - height) / 2, width, height);
-                        resolve(labelElement);
+                        context.rotate(calculateRadian(-car.Course));
+                        context.drawImage(carImage, leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
+                        cache.cars[car.IconPath] = carImage;
+                        resolve();
                     };
-                    cache.cars[car.IconPath] = carImage;
                 } else {
-                    let width = carImageSize,
-                        height = carImageSize * cache.cars[car.IconPath].height / cache.cars[car.IconPath].width;
-                    ctxLabel.setTransform(1, 0, 0, 1, 0, 0);
-                    ctxLabel.drawImage(cache.cars[car.IconPath], markerSize.xStart + (boubleWidth - width) / 2, (boubleWidth - height) / 2, width, height);
-                    resolve(labelElement);
+                    context.rotate(calculateRadian(-car.Course));
+                    context.drawImage(cache.cars[car.IconPath], leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
+                    resolve();
                 }
-            }).then(function (labelElement) {
-                ctxResult.drawImage(labelElement, 0, 0);
-                if (markerType != 0) {
-                    ctxResult.drawImage(canvasMarker, 0, 0);
-                }
-                console.log(resultCanvas.toDataURL());
+            }).then(function () {
                 resolve({image: resultCanvas.toDataURL(), markerSize: markerSize});
             });
         } else
@@ -291,30 +229,22 @@ function drawPosition(ctx, x, y, size, color) {
     ctx.stroke();
 }
 
+function drawCircle(r, angle, image) {
+
+
+    if (!!image) {
+        context.rotate(calculateRadian(-angle));
+        context.drawImage(image, leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
+    }
+    return resultCanvas;
+}
+
+function calculateRadian(degrees) {
+    return degrees * Math.PI / 180;
+}
+
 function drawArrow(ctx, size, color,
                    borderWidth, borderColor) {
-    /*const arrSize = size / 2.3;
-    const arrSizeMaxWidth = Math.ceil(Math.sqrt(2 * Math.pow(arrSize, 2)));
-    const k = arrSizeMaxWidth / 2;
-    const x = size / 2;
-
-    ctx.beginPath();
-
-    ctx.lineCap = 'square';
-    ctx.lineWidth = 10;
-
-    [borderColor, '#fff', color].forEach((clr) => {
-        ctx.strokeStyle = clr;
-        ctx.lineWidth -= 2;
-
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x - k, k);
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + k, k);
-        ctx.moveTo(x, ctx.lineWidth / 2);
-        ctx.lineTo(x, size);
-        ctx.stroke();
-    });*/
     ctx.lineWidth = borderWidth;
     ctx.strokeStyle = borderColor;
     ctx.fillStyle = color;
