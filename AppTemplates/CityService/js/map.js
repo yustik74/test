@@ -80,8 +80,7 @@ function drawCursor(canvasElement, car) {
                 context.drawImage(image.image, 0, canvasElement.height / 2);
                 xPos = image.anchorX;
                 yPos = image.anchorY + canvasElement.height / 2;
-                getCursorIcon(canvasElement.width, car.IconPath).then(function(imageCar)
-                {
+                getCursorIcon(canvasElement.width, car.IconPath).then(function (imageCar) {
                     context.drawImage(imageCar, 0, canvasElement.height / 2);
                     resolve({image: canvasElement.toDataURL(), anchorX: xPos, anchorY: yPos});
                 });
@@ -91,41 +90,48 @@ function drawCursor(canvasElement, car) {
 
     return new Promise((resolve) => {
         new Promise((resolve) => {
-            if (flagIsSet(cursorBackgroundSet)) {
-                if (parm.Settings['CursorBackgroundPath'] !== 'none') {
-                    getImage(parm.Settings['CursorBackgroundPath']).then(function (image) {
-                        context.drawImage(image, 0, canvasElement.height / 2);
-                        resolve();
-                    });
+            if (flagIsSet(cursorSet)) {
+                if (parm.Settings['CursorPath'] !== 'none') {
+                    if (parm.Settings['CursorPath'] == 'AutoGRAPH') {
+                        getDefaultArrowCursor(canvasElement.width, car, cursorColor).then(function (image) {
+                            xPos = image.anchorX;
+                            yPos = image.anchorY + canvasElement.height / 2;
+                            context.drawImage(image.image, 0, canvasElement.height / 2);
+                            resolve();
+                        });
+                    } else {
+                        getImage(parm.Settings['CursorPath']).then(function (image) {
+                            let cursorCanvasElement = document.createElement('canvas');
+                            cursorCanvasElement.width = canvasElement.width;
+                            cursorCanvasElement.height = canvasElement.height / 2;
+                            let offsetWidth = cursorCanvasElement.width / 2;
+                            let offsetHeight = cursorCanvasElement.height / 2;
+                            let cursorContext = cursorCanvasElement.getContext('2d');
+                            cursorContext.translate(offsetWidth, offsetHeight);
+                            cursorContext.rotate(calculateRadian(car.Course));
+                            cursorContext.drawImage(image, -offsetWidth, -offsetHeight, cursorCanvasElement.width, cursorCanvasElement.height);
+                            context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2);
+                            resolve();
+                        });
+                    }
                 }
             } else
                 resolve();
+
         }).then(function () {
             return new Promise((resolve) => {
-                if (flagIsSet(cursorSet)) {
-                    if (parm.Settings['CursorPath'] !== 'none') {
-                        if (parm.Settings['CursorPath'] == 'AutoGRAPH') {
-                            getDefaultArrowCursor(canvasElement.width, car, cursorColor).then(function (image) {
-                                xPos = image.anchorX;
-                                yPos = image.anchorY + canvasElement.height / 2;
-                                context.drawImage(image.image, 0, canvasElement.height / 2);
+                if (flagIsSet(cursorBackgroundSet)) {
+                    if (parm.Settings['CursorBackgroundPath'] !== 'none') {
+                        if (parm.Settings['CursorBackgroundPath'] == 'AutoGRAPH') {
+                            getCursorIcon(canvasElement.width, car.IconPath).then(function (imageCar) {
+                                context.drawImage(imageCar, 0, canvasElement.height / 2);
                                 resolve();
                             });
-                        } else {
-                            getImage(parm.Settings['CursorPath']).then(function (image) {
-                                let cursorCanvasElement = document.createElement('canvas');
-                                cursorCanvasElement.width = canvasElement.width;
-                                cursorCanvasElement.height = canvasElement.height / 2;
-                                let offsetWidth = cursorCanvasElement.width / 2;
-                                let offsetHeight = cursorCanvasElement.height / 2;
-                                let cursorContext = cursorCanvasElement.getContext('2d');
-                                cursorContext.translate(offsetWidth, offsetHeight);
-                                cursorContext.rotate(calculateRadian(car.Course));
-                                cursorContext.drawImage(image, -offsetWidth, -offsetHeight, cursorCanvasElement.width, cursorCanvasElement.height);
-                                context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2);
+                        } else
+                            getImage(parm.Settings['CursorBackgroundPath']).then(function (image) {
+                                context.drawImage(image, 0, canvasElement.height / 2);
                                 resolve();
                             });
-                        }
                     }
                 } else
                     resolve();
