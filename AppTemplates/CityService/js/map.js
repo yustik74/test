@@ -1,10 +1,25 @@
 let moveAnimationLastTimeLimit = 3600 * 24 * 7;
+const cursorSet = 1;
+const cursorBackgroundSet = 2;
+const iconSet = 4;
+const iconBackgroundSet = 8;
+
+let markerType = 0;
 let cache = { // Images elements for canvas
     cars: {},
     statuses: {}
 };
 
 function InitMap(id, maxClusterRadius) {
+    if (!!parm.Settings['CursorBackgroundPath'])
+        markerType |= cursorBackgroundSet;
+    if (!!parm.Settings['CursorPath'])
+        markerType |= cursorSet;
+    if (!!parm.Settings['IconBackgroundPath'])
+        markerType |= iconBackgroundSet;
+    if (!!parm.Settings['IconPath'])
+        markerType |= iconSet;
+
     let mapObject = Object();
     mapObject.map = L.map(id, {
         preferCanvas: true,
@@ -36,234 +51,212 @@ function createMarker(item) {
         let info = item.Name + " " + item.Plate + "<br>Скорость: " + round(item.Speed, 2) + "км/ч<br>Состояние: " + getStateName(item.Speed) + "<br>Последняя активность: " + getTimeDifferenceString(item.LastTime);
         item.Alias = info;
         item.showLabel = false;
-        let markerType = 1;
-        let cursorColor = 'dd0000';
-        if (drawCursor & !drawIcon || (!drawCursor & !drawIcon)) {
-            markerType = 1;
-        }
-        if (!drawCursor & drawIcon) {
-            markerType = 0;
-        }
-        if (drawCursor & drawIcon) {
-            markerType = 2;
-        }
-        getArrowCursor(item, cursorColor, markerType, 16).then(function (image) {
-            console.log(image.image);
+        let canvasElement = document.createElement('canvas');
+        drawCursor(canvasElement, item).then(function (image) {
+            //console.log(image.image);
             let marker = L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {
                 icon: L.icon({
                     iconUrl: image.image,
-                    iconAnchor: [image.markerSize.xPos, image.markerSize.yPos],
+                    iconAnchor: [image.anchorX, image.anchorY],
                 })
             });
-            marker.bindPopup(info);
+            //marker.bindPopup(info);
             marker.bindTooltip(info);
             resolve(marker);
         });
     });
 }
 
-function calculateMarkerSize(markerType, borderWidth, labelHeight, labelMargin, boubleWidth, boubleHeight, carArrowSizeMax) {
-    /*  car.markerType
-        0 - только иконка
-        1 - только курсор
-        2 - иконка и курсор
-        */
-    if (markerType == 0) {
-        markerWidth = boubleWidth + borderWidth;
-        markerHeight = labelHeight + labelMargin + boubleHeight + borderWidth;
+function drawCursor(canvasElement, car) {
+    let cursorColor = '#000280';
+    canvasElement.width = 48;
+    canvasElement.height = 96;
+    let context = canvasElement.getContext('2d');
+    let xPos = canvasElement.width / 2;
+    let yPos = canvasElement.height / 4 * 3;
+    if (markerType == 0)
+        return new Promise((resolve) => {
+            getArrowCursor(canvasElement.width, car, cursorColor, 2, car.IconPath).then(function (image) {
+                context.drawImage(image.image, 0, canvasElement.height / 2);
+                xPos = image.anchorX;
+                yPos = image.anchorY + canvasElement.height / 2;
+                resolve({image: canvasElement.toDataURL(), anchorX: xPos, anchorY: yPos});
+            });
+        });
 
-        yPos = markerHeight;
-
-        xStart = borderWidth / 2;
-    }
-    if (markerType == 1) {
-        markerWidth = carArrowSizeMax;
-        markerHeight = labelHeight + labelMargin + carArrowSizeMax;
-        boubleWidth = 0;
-        boubleHeight = 0;
-
-        yPos = markerHeight - carArrowSizeMax / 2;
-    }
-    if (markerType == 2) {
-        markerWidth = Math.max(boubleWidth + borderWidth, carArrowSizeMax);
-        markerHeight = labelHeight + labelMargin + boubleHeight + borderWidth + carArrowSizeMax / 2;
-
-        yPos = markerHeight - carArrowSizeMax / 2;
-
-        xStart = borderWidth / 2;
-
-        if (boubleWidth + borderWidth < carArrowSizeMax) {
-            xStart += (carArrowSizeMax - boubleWidth) / 2;
-        }
-    }
-    let xPos = markerWidth / 2;
-    return {
-        xStart: xStart,
-        xPos: xPos,
-        yPos: yPos,
-        markerWidth: markerWidth,
-        markerHeight: markerHeight,
-        boubleWidth: boubleWidth,
-        boubleHeight: boubleHeight
-    };
+    return new Promise((resolve) => {
+        new Promise((resolve) => {
+            if (flagIsSet(cursorBackgroundSet)) {
+                if (parm.Settings['CursorBackgroundPath'] !== 'none') {
+                    getImage(parm.Settings['CursorBackgroundPath']).then(function (image) {
+                        context.drawImage(image, 0, canvasElement.height / 2);
+                        resolve();
+                    });
+                }
+            } else
+                resolve();
+        }).then(function () {
+            return new Promise((resolve) => {
+                if (flagIsSet(cursorSet)) {
+                    if (parm.Settings['CursorPath'] !== 'none') {
+                        if (parm.Settings['CursorPath'] == 'AutoGRAPH') {
+                            getArrowCursor(canvasElement.width, car, cursorColor, 1).then(function (image) {
+                                xPos = image.anchorX;
+                                yPos = image.anchorY + canvasElement.height / 2;
+                                context.drawImage(image.image, 0, canvasElement.height / 2);
+                                resolve();
+                            });
+                        } else {
+                            getImage(parm.Settings['CursorPath']).then(function (image) {
+                                let cursorCanvasElement = document.createElement('canvas');
+                                cursorCanvasElement.width = canvasElement.width;
+                                cursorCanvasElement.height = canvasElement.height / 2;
+                                let offsetWidth = cursorCanvasElement.width / 2;
+                                let offsetHeight = cursorCanvasElement.height / 2;
+                                let cursorContext = cursorCanvasElement.getContext('2d');
+                                cursorContext.translate(offsetWidth, offsetHeight);
+                                cursorContext.rotate(calculateRadian(car.Course));
+                                cursorContext.drawImage(image, -offsetWidth, -offsetHeight, cursorCanvasElement.width, cursorCanvasElement.height);
+                                //console.log(cursorCanvasElement.toDataURL());
+                                context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2);
+                                //console.log(canvasElement.toDataURL());
+                                resolve();
+                            });
+                        }
+                    }
+                } else
+                    resolve();
+            })
+        }).then(function () {
+            return new Promise((resolve) => {
+                if (flagIsSet(iconBackgroundSet)) {
+                    if (parm.Settings['IconBackgroundPath'] !== 'none') {
+                        getImage(parm.Settings['IconBackgroundPath']).then(function (image) {
+                            context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
+                            resolve();
+                        });
+                    }
+                } else
+                    resolve();
+            })
+        }).then(function () {
+            return new Promise((resolve) => {
+                if (flagIsSet(iconSet)) {
+                    if (parm.Settings['IconPath'] !== 'none') {
+                        getImage(parm.Settings['IconPath']).then(function (image) {
+                            context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
+                            resolve();
+                        });
+                    }
+                } else resolve();
+            })
+        }).then(function () {
+            resolve({image: canvasElement.toDataURL(), anchorX: xPos, anchorY: yPos});
+        });
+    });
 }
 
-function getArrowCursor(car, cursorColor, markerType, r) {
+function flagIsSet(flag) {
+    if ((markerType & flag) == flag)
+        return true;
+    return false;
+}
+
+function getCursorIcon(sideSize, iconPath) {
     return new Promise((resolve) => {
+        let canvas = document.createElement('canvas');
+        canvas.width = canvas.height = sideSize;
+        let context = canvas.getContext('2d');
+        let margin = sideSize * 0.2;
+        let size = sideSize * 0.6;
+        getImage(iconPath).then(function (image) {
+            context.drawImage(image, margin, margin, size, size);
+            resolve(canvas);
+        });
+    });
+}
+
+function getArrowCursor(sideSize, car, cursorColor, markerType, iconPath = null) {
+    return new Promise((resolve) => {
+        let resultCanvas = document.createElement('canvas');
+        resultCanvas.width = sideSize;
+        resultCanvas.height = sideSize;
+        let r = sideSize / 4;
         let lineWidth = r / 1.5;
         let arrowLedge = r / 3 * 2.5;
         let arrowDegrees = 45;
         let degreesL = calculateRadian(270 + arrowDegrees);
         let degreesR = calculateRadian(270 - arrowDegrees);
-        let centerPoint = r + arrowLedge;
-        let resultCanvas = document.createElement('canvas');
-        resultCanvas.setAttribute('id', 'marker-icon-marker');
-        resultCanvas.width = (r + arrowLedge) * 2;
-        resultCanvas.height = (r + arrowLedge) * 2;
+        let centerPoint = resultCanvas.width / 2;
         let context = resultCanvas.getContext('2d');
         context.translate(centerPoint, centerPoint);
         context.rotate(calculateRadian(car.Course));
-        let markerSize = {xPos: centerPoint, yPos: centerPoint};
 
-        let rightPointR = {
-            X: r * Math.cos(degreesL),
-            Y: r * Math.sin(degreesL)
-        };
-        let leftPointR = {
-            X: r * Math.cos(degreesR),
-            Y: r * Math.sin(degreesR)
-        };
+        let rightPoint = calculateCirclePoint(r, degreesL);
+        let leftPoint = calculateCirclePoint(r, degreesR);
 
         if (markerType == 1 || markerType == 2) {
             context.beginPath();
             context.arc(0, 0, r, 0, 2 * Math.PI, false);
             context.lineWidth = lineWidth;
-            context.strokeStyle = '#000280';
+            context.strokeStyle = cursorColor;
             context.stroke();
             context.fillStyle = '#ffffff';
             context.fill();
             context.closePath();
             context.beginPath();
-            context.fillStyle = '#000280';
+            context.fillStyle = cursorColor;
             context.lineWidth = 0;
             context.moveTo(0, -r - arrowLedge);
-            context.lineTo(leftPointR.X, leftPointR.Y - lineWidth / 2);
-            context.lineTo(rightPointR.X, rightPointR.Y - lineWidth / 2);
+            context.lineTo(leftPoint.X, leftPoint.Y - lineWidth / 2);
+            context.lineTo(rightPoint.X, rightPoint.Y - lineWidth / 2);
             context.lineTo(0, -r - arrowLedge);
             context.fill();
             context.closePath();
         }
 
         if (markerType == 0 || markerType == 2) {
-            new Promise((resolve, reject) => {
-                if (!cache.cars[car.IconPath]) {
-                    let carImage = new Image();
-                    carImage.src = car.IconPath;
-                    carImage.onload = function () {
-                        context.rotate(calculateRadian(-car.Course));
-                        context.drawImage(carImage, leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
-                        cache.cars[car.IconPath] = carImage;
-                        resolve();
-                    };
-                } else {
+            if (iconPath == null) {
+                resolve({image: resultCanvas, anchorX: centerPoint, anchorY: centerPoint});
+            } else
+                getImage(iconPath).then(function (image) {
                     context.rotate(calculateRadian(-car.Course));
-                    context.drawImage(cache.cars[car.IconPath], leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
-                    resolve();
-                }
-            }).then(function () {
-                resolve({image: resultCanvas.toDataURL(), markerSize: markerSize});
-            });
-        } else
-            resolve({image: resultCanvas.toDataURL(), markerSize: markerSize});
+                    context.drawImage(image, leftPoint.X, leftPoint.Y, r * 1.5, r * 1.5);
+                    resolve({
+                        image: resultCanvas,
+                        anchorX: centerPoint,
+                        anchorY: (resultCanvas.height / 2) + centerPoint
+                    });
+                });
+        } else {
+            resolve({image: resultCanvas, anchorX: centerPoint, anchorY: (resultCanvas.height / 2) + centerPoint});
+        }
     });
 }
 
-function drawBorder(ctx, width, height,
-                    roundSize, pipkaSize) {
-    let PI2 = Math.PI * 2,
-        icSizeMPSize = width - pipkaSize;
-
-    ctx.moveTo(roundSize, 0);
-    ctx.lineTo(width - roundSize, 0); // horz
-    ctx.arc(width - roundSize, roundSize, roundSize, -PI2 / 4, 0); // right top corner
-    ctx.lineTo(width, width - roundSize); // right vertical
-    ctx.arc(width - roundSize, height - roundSize, roundSize, 0, PI2 / 4); // right bottom corner
-    if (pipkaSize) {
-        ctx.lineTo(width - (icSizeMPSize) / 2, width); // right pipka horz
-        ctx.lineTo(width / 2, width + width / 2); // right pipka leg
-        ctx.lineTo((icSizeMPSize) / 2, height); // left pipka leg
-    }
-    ctx.lineTo(roundSize, height); // left pipka horz
-    ctx.arc(roundSize, height - roundSize, roundSize, PI2 / 4, PI2 / 2); // left bottom corner
-    ctx.lineTo(0, roundSize); // left vertical
-    ctx.arc(roundSize, roundSize, roundSize, PI2 / 2, -PI2 / 4); // left top corner
+function calculateCirclePoint(r, angleRadian) {
+    return {
+        X: r * Math.cos(angleRadian),
+        Y: r * Math.sin(angleRadian)
+    };
 }
 
-function drawPosition(ctx, x, y, size, color) {
+function getImage(iconPath) {
+    return new Promise((resolve) => {
+        if (!cache.cars[iconPath]) {
+            let carImage = new Image();
+            carImage.src = iconPath;
+            carImage.onload = function () {
+                cache.cars[iconPath] = carImage;
+                resolve(cache.cars[iconPath]);
+            };
+        } else {
+            resolve(cache.cars[iconPath]);
+        }
+    });
 
-    // --- shadow --
-
-    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-    ctx.lineWidth = 4;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, 2 * Math.PI, false);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, 2 * Math.PI, false);
-    ctx.stroke();
-
-    // --- circle ---
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, 2 * Math.PI, false);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, 2 * Math.PI, false);
-    ctx.stroke();
-}
-
-function drawCircle(r, angle, image) {
-
-
-    if (!!image) {
-        context.rotate(calculateRadian(-angle));
-        context.drawImage(image, leftPointR.X, leftPointR.Y, r * 1.5, r * 1.5);
-    }
-    return resultCanvas;
 }
 
 function calculateRadian(degrees) {
     return degrees * Math.PI / 180;
-}
-
-function drawArrow(ctx, size, color,
-                   borderWidth, borderColor) {
-    ctx.lineWidth = borderWidth;
-    ctx.strokeStyle = borderColor;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(size / 2, 0);
-    ctx.lineTo(size, size);
-    ctx.lineTo(size / 2, size * 0.75);
-    ctx.lineTo(0, size);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fill();
-
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth--;
-    ctx.beginPath();
-    ctx.moveTo(size / 2, borderWidth);
-    ctx.lineTo(size - borderWidth, size - borderWidth);
-    ctx.lineTo(size / 2, size * 0.75 - borderWidth + 1);
-    ctx.lineTo(borderWidth, size - borderWidth);
-    ctx.closePath();
-    ctx.stroke();
 }

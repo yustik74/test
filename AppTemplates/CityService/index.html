@@ -99,21 +99,6 @@
     const parm = window['external-settings'];
 
     let cursorPath = parm.Urls.Content + "/img/arrow.png";
-    if (!!parm.Settings['CustomCursor'])
-        cursorPath = parm.Urls.App + parm.Settings['CustomCursor'];
-    let iconPath = "";
-    if (!!parm.Settings['CustomIcon'])
-        iconPath = parm.Urls.App + parm.Settings['CustomIcon'];
-
-    let drawCursor = true;
-    if (!!parm.Settings['CursorEnabled'])
-        drawCursor = isEnabled(parm.Settings['CursorEnabled']);
-    let drawIcon = false;
-    if (!!parm.Settings['IconEnabled'])
-        drawIcon = isEnabled(parm.Settings['IconEnabled']);
-
-    if (!drawCursor & !drawIcon)
-        drawCursor = true;
 
     let mapObject = InitMap('map', parm.Settings['ClusterSize']);
     let bounds = [];
@@ -294,15 +279,12 @@
                 removeDevices.push(device);
             }
         });
-        //удаляем устаревшие устройства
-        removeDevices.forEach(function (device) {
-            //mapObject.devicesLayer.removeLayer(device.Marker);
-            //currentDevices.splice(currentDevices.indexOf(device), 1);
-        });
         //сдвигаем маркер для обновившихся устройств
         changedDevices.forEach(function (device) {
-            //device.Marker.setLatLng([device.LastPosition.Lat, device.LastPosition.Lng]);
-            //device.Marker.options.img.rotate = device.Course;
+            createMarker(device).then(function (marker)
+            {
+                device.Marker = marker;
+            });
         });
         //добавляем координаты для позиционирования карты
         onlineDevices.forEach(item => {
