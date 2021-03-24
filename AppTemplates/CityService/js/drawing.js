@@ -45,15 +45,15 @@ function drawCursorIcon(canvasElement, context, car) {
     let xPos = 0;
     let yPos = 0;
     return new Promise(async (resolve) => {
-        if (flagIsSet(cursorSet) && parm.Settings['CursorPath'] != none) {
+        if (flagIsSet(cursorIconSet) && parm.Settings['CursorBackgroundPath'] != none) {
             let cursorCanvasElement;
-            if (parm.Settings['CursorPath'] == auto) {
+            if (parm.Settings['CursorBackgroundPath'] == auto) {
                 let defaultCursor = await getDefaultArrowCursor(canvasElement.width, car, cursorColor);
                 xPos = defaultCursor.anchorX;
                 yPos = defaultCursor.anchorY + canvasElement.height / 2;
                 cursorCanvasElement = defaultCursor.image;
             } else {
-                let image = await getImage(parm.Urls.Content + parm.Settings['CursorPath']);
+                let image = await getImage(parm.Urls.Content + parm.Settings['CursorBackgroundPath']);
                 xPos = canvasElement.width / 2;
                 yPos = canvasElement.height * 3 / 4;
                 cursorCanvasElement = getRotatedCursor(image, canvasElement.width, canvasElement.height / 2, car.Course);
@@ -67,12 +67,12 @@ function drawCursorIcon(canvasElement, context, car) {
 
 function drawCursorBackground(canvasElement, context, car) {
     return new Promise(async (resolve) => {
-        if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorBackgroundPath'] != none) {
+        if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorIconPath'] != none) {
             let image;
-            if (parm.Settings['CursorBackgroundPath'] == auto)
+            if (parm.Settings['CursorIconPath'] == auto)
                 image = await getIcon(canvasElement.width, car.IconPath);
             else
-                image = await getImage(parm.Urls.Content + parm.Settings['CursorBackgroundPath']);
+                image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
             context.drawImage(image, 0, canvasElement.height / 2, canvasElement.width, canvasElement.height / 2);
             resolve();
         } else

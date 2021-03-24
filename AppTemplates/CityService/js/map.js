@@ -1,5 +1,5 @@
 let moveAnimationLastTimeLimit = 3600 * 24 * 7;
-const cursorSet = 1;
+const cursorIconSet = 1;
 const cursorBackgroundSet = 2;
 const iconSet = 4;
 const iconBackgroundSet = 8;
@@ -16,8 +16,8 @@ let cache = { // Images elements for canvas
 function InitMap(id, maxClusterRadius, defaultView) {
     if (!!parm.Settings['CursorBackgroundPath'])
         markerType |= cursorBackgroundSet;
-    if (!!parm.Settings['CursorPath'])
-        markerType |= cursorSet;
+    if (!!parm.Settings['CursorIconPath'])
+        markerType |= cursorIconSet;
     if (!!parm.Settings['IconBackgroundPath'])
         markerType |= iconBackgroundSet;
     if (!!parm.Settings['IconPath'])
