@@ -151,10 +151,12 @@ function drawCursorIcon(canvasElement, context, car) {
                 yPos = defaultCursor.anchorY + canvasElement.height / 2;
                 cursorCanvasElement = defaultCursor.image;
             } else {
-                let image = await getImage(parm.Settings['CursorPath']);
-                cursorCanvasElement = drawRotatedCursor(image, canvasElement.width, canvasElement.height / 2, car.Course);
+                let image = await getImage(parm.Urls.Content + parm.Settings['CursorPath']);
+                xPos = canvasElement.width / 2;
+                yPos = canvasElement.height * 3 / 4;
+                cursorCanvasElement = getRotatedCursor(image, canvasElement.width, canvasElement.height / 2, car.Course);
             }
-            context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2);
+            context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2, canvasElement.width, canvasElement.height / 2);
             resolve([xPos, yPos]);
         } else
             resolve();
@@ -168,7 +170,7 @@ function drawCursorBackground(canvasElement, context, car) {
             if (parm.Settings['CursorBackgroundPath'] == auto)
                 image = await getIcon(canvasElement.width, car.IconPath);
             else
-                image = await getImage(parm.Settings['CursorBackgroundPath']);
+                image = await getImage(parm.Urls.Content + parm.Settings['CursorBackgroundPath']);
             context.drawImage(image, 0, canvasElement.height / 2, canvasElement.width, canvasElement.height / 2);
             resolve();
         } else
@@ -183,7 +185,7 @@ function drawIconBackground(canvasElement, context) {
                 let background = await getDefaultIconBackground(canvasElement.width);
                 context.drawImage(background, canvasElement.width * 0.175, 0, canvasElement.width, canvasElement.height / 2);
             } else {
-                let image = await getImage(parm.Settings['IconBackgroundPath']);
+                let image = await getImage(parm.Urls.Content + parm.Settings['IconBackgroundPath']);
                 context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
             }
             resolve();
@@ -199,7 +201,7 @@ function drawIcon(canvasElement, context, car) {
             if (parm.Settings['IconPath'] == auto) {
                 image = await getIcon(canvasElement.width, car.IconPath, 3)
             } else
-                image = await getImage(parm.Settings['IconPath']);
+                image = await getImage(parm.Urls.Content + parm.Settings['IconPath']);
             context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
             resolve();
         } else
@@ -207,7 +209,7 @@ function drawIcon(canvasElement, context, car) {
     });
 }
 
-function drawRotatedCursor(image, width, height, angle) {
+function getRotatedCursor(image, width, height, angle) {
     let cursorCanvasElement = document.createElement('canvas');
     cursorCanvasElement.width = width;
     cursorCanvasElement.height = height;
@@ -217,6 +219,7 @@ function drawRotatedCursor(image, width, height, angle) {
     cursorContext.translate(offsetWidth, offsetHeight);
     cursorContext.rotate(calculateRadian(angle));
     cursorContext.drawImage(image, -offsetWidth, -offsetHeight, cursorCanvasElement.width, cursorCanvasElement.height);
+    return cursorCanvasElement;
 }
 
 function flagIsSet(flag) {
