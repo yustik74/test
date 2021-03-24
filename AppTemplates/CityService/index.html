@@ -249,9 +249,6 @@
             bounds = [];
             let changedDevices = [];
             let removeDevices = [];
-            let added = 0;
-            let removed = 0;
-            let changed = 0;
             //собираем, какие устройства изменились, а какие - новые
             for (const device of onlineDevices) {
                 let found = currentDevices.find(a => a.ID == device.ID);
@@ -276,7 +273,6 @@
                     let marker = await createMarker(newDev)
                     newDev.Marker = marker;
                     mapObject.devicesLayer.addLayer(newDev.Marker);
-                    added++;
                     currentDevices.push(newDev);
                 }
             }
@@ -289,7 +285,6 @@
             });
             removeDevices.forEach(function (device) {
                 mapObject.devicesLayer.removeLayer(device.Marker);
-                removed++;
                 currentDevices.splice(currentDevices.indexOf(device), 1);
             });
 
@@ -298,11 +293,8 @@
             });
             //сдвигаем маркер для обновившихся устройств
             changedDevices.forEach(function (device) {
-                updateMarker(device).then(function () {
-                    changed++;
-                });
+                updateMarker(device);
             });
-            console.log('added ' + added + ', changed ' + changed + ', removed ' + removed);
             resolve();
         });
     }
@@ -413,7 +405,7 @@
     function getTimeDifferenceString(oldDate) {
         let difference = getTimeDifferenceInSeconds(oldDate);
         if (difference < 60)
-            return "<1 min";
+            return round(difference, 0) + " s";
         else if (difference < 3600)
             return round(difference / 60, 0) + " min";
         else if (difference < 86400)
