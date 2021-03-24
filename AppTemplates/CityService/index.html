@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Уборочная техника</title>
+    <title>Коммунальная техника</title>
     <style>
 
     </style>
@@ -97,10 +97,10 @@
 </div>
 <script>
     const parm = window['external-settings'];
-
+    let defaultView = parm.Settings['DefaultCoordinates'];
     let cursorPath = parm.Urls.Content + "/img/arrow.png";
 
-    let mapObject = InitMap('map', parm.Settings['ClusterSize']);
+    let mapObject = InitMap('map', parm.Settings['ClusterSize'], defaultView);
     let bounds = [];
 
     if (!!parm.Settings.LogoUrl) {
@@ -128,24 +128,29 @@
     let outdatedTimeout = parm.Settings['OutdatedTimeout'];
     if (!!!outdatedTimeout)
         outdatedTimeout = 60 * 24 * 365 * 10; //10 years
-    updateOrganization().then((devices) => {
-        allDevices = devices;
-        allDevicesWithPlates = allDevices.Items.filter(a => !!a && !!a.Properties && !!a.Properties.find(b => b.Name == "VehicleRegNumber"));
-        rootGroup = devices.Groups.find(a => a.ParentID == null);
-        currentGroupId = rootGroup.ID;
 
-        updateL1Dropdown();
-        updateL2Dropdown();
-        updateDevices().then((online) => {
-            updateGroupList(currentGroupId);
-            onlineDevices = online;
-            drawSubgroupDevices(onlineDevices);
-            if (bounds.length > 0)
-                mapObject.map.fitBounds(bounds);
-            setUpdateTimer(timeout);
+    initApp();
+
+    async function initApp() {
+        updateOrganization().then((devices) => {
+            allDevices = devices;
+            allDevicesWithPlates = allDevices.Items.filter(a => !!a && !!a.Properties && !!a.Properties.find(b => b.Name == "VehicleRegNumber"));
+            rootGroup = devices.Groups.find(a => a.ParentID == null);
+            currentGroupId = rootGroup.ID;
+
+            updateL1Dropdown();
+            updateL2Dropdown();
+            updateDevices().then(async (online) => {
+                updateGroupList(currentGroupId);
+                onlineDevices = online;
+                await drawSubgroupDevices(onlineDevices);
+                if (bounds.length > 0)
+                    mapObject.map.fitBounds(bounds);
+                setUpdateTimer(timeout);
+            });
+            initStats();
         });
-        initStats();
-    });
+    }
 
     function initStats() {
         let statsInfo = {
@@ -203,11 +208,11 @@
         kendo.bind($("#childrenGroups"), nestedGroupsViewModel);
     }
 
-    function onMainGroupChange() {
+    async function onMainGroupChange() {
         updateL2Dropdown();
         currentGroupId = mainGroupsViewModel.get("ID");
         updateGroupList(currentGroupId);
-        drawSubgroupDevices(onlineDevices);
+        await drawSubgroupDevices(onlineDevices);
         if (bounds.length > 0)
             mapObject.map.fitBounds(bounds);
     }
@@ -226,7 +231,7 @@
         currentGroupDevicesList = getChildren(allDevices, groupID);
     }
 
-    function drawSubgroupDevices(devices) {
+    async function drawSubgroupDevices(devices) {
         let childrenToDraw = [];
         currentGroupDevicesList.forEach(function (device) {
             let found = devices.find(a => a.ID == device.ID);
@@ -236,59 +241,69 @@
         });
         statsViewModel.set('carsInGroupOnline', childrenToDraw.length);
         statsViewModel.set('totalCarsInGroup', currentGroupDevicesList.length);
-        drawDevices(childrenToDraw);
+        return drawDevices(childrenToDraw);
     }
 
-    function drawDevices(onlineDevices) {
-        bounds = [];
-        let removeDevices = [];
-        let newDevices = [];
-        let changedDevices = [];
-        //собираем, какие устройства изменились, а какие - новые
-        onlineDevices.forEach(function (device) {
-            let found = currentDevices.find(a => a.ID == device.ID);
-            if (!!found) {
-                found.LastPosition = device.LastPosition;
-                changedDevices.push(found);
-            } else {
-                let newDev = {
-                    ID: device.ID,
-                    Name: device.Name,
-                    LastPosition: device.LastPosition,
-                    Course: device.Course,
-                    Speed: device.Speed,
-                    Plate: device.Plate,
-                    LastTime: device.LastTime,
-                    IconPath: device.IconPath,
-                };
-                createMarker(newDev).then(function (marker)
-                {
+    async function drawDevices(onlineDevices) {
+        return new Promise(async (resolve) => {
+            bounds = [];
+            let changedDevices = [];
+            let removeDevices = [];
+            let added = 0;
+            let removed = 0;
+            let changed = 0;
+            //собираем, какие устройства изменились, а какие - новые
+            for (const device of onlineDevices) {
+                let found = currentDevices.find(a => a.ID == device.ID);
+                if (!!found) {
+                    found.LastPosition = device.LastPosition;
+                    found.Speed = device.Speed;
+                    found.Course = device.Course;
+                    found.LastTime = device.LastTime;
+                    changedDevices.push(found);
+                } else {
+                    let newDev = {
+                        ID: device.ID,
+                        Name: device.Name,
+                        LastPosition: device.LastPosition,
+                        Course: device.Course,
+                        Speed: device.Speed,
+                        Plate: device.Plate,
+                        LastTime: device.LastTime,
+                        IconPath: device.IconPath,
+                    };
+
+                    let marker = await createMarker(newDev)
                     newDev.Marker = marker;
                     mapObject.devicesLayer.addLayer(newDev.Marker);
-                });
-                currentDevices.push(device);
+                    added++;
+                    currentDevices.push(newDev);
+                }
             }
-        });
-        //собираем, какие устройства пропали из отрисовки
-        currentDevices.forEach(function (device) {
-            let found = onlineDevices.find(a => a.ID == device.ID);
-            if (!!!found)
-            {
-                mapObject.devicesLayer.removeLayer(device.Marker);
-                currentDevices.splice(currentDevices.indexOf(device), 1);
-                removeDevices.push(device);
-            }
-        });
-        //сдвигаем маркер для обновившихся устройств
-        changedDevices.forEach(function (device) {
-            createMarker(device).then(function (marker)
-            {
-                device.Marker = marker;
+            //собираем, какие устройства пропали из отрисовки
+            currentDevices.forEach(function (device) {
+                let found = onlineDevices.find(a => a.ID == device.ID);
+                if (!found) {
+                    removeDevices.push(device);
+                }
             });
-        });
-        //добавляем координаты для позиционирования карты
-        onlineDevices.forEach(item => {
-            bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
+            removeDevices.forEach(function (device) {
+                mapObject.devicesLayer.removeLayer(device.Marker);
+                removed++;
+                currentDevices.splice(currentDevices.indexOf(device), 1);
+            });
+
+            currentDevices.forEach(item => {
+                bounds.push([item.LastPosition.Lat, item.LastPosition.Lng]);
+            });
+            //сдвигаем маркер для обновившихся устройств
+            changedDevices.forEach(function (device) {
+                updateMarker(device).then(function () {
+                    changed++;
+                });
+            });
+            console.log('added ' + added + ', changed ' + changed + ', removed ' + removed);
+            resolve();
         });
     }
 
@@ -315,30 +330,30 @@
                         && !!a[1]._LastCoords
                         && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout
                     ).map(item => {
-                        let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
-                        let plateNumber;
-                        if (item[1].Final.AppCityServiceVisible == false)
-                            return null;
-                        let imageName = "sedan.png";
-                        if (!!deviceInfo) {
-                            plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
-                            if (!!deviceInfo.Image)
-                                imageName = deviceInfo.Image;
-                        } else
-                            plateNumber = "";
-
-                        return {
-                            LastPosition: item[1].LastPosition,
-                            Name: item[1].Name,
-                            Course: item[1].Course,
-                            Speed: item[1].Speed,
-                            DeviceInfo: allDevices.Items.find(a => a.ID == item[0]),
-                            ID: item[0],
-                            Plate: plateNumber,
-                            LastTime: item[1]._LastData,
-                            IconPath: parm.Urls.ImageCar + "/" + imageName,
+                            let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
+                            let plateNumber;
+                            if (item[1].Final.AppCityServiceVisible == false)
+                                return null;
+                            let imageName = "sedan.png";
+                            if (!!deviceInfo) {
+                                plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
+                                if (!!deviceInfo.Image)
+                                    imageName = deviceInfo.Image;
+                            } else
+                                plateNumber = "";
+                            return {
+                                LastPosition: item[1].LastPosition,
+                                Name: item[1].Name,
+                                Course: item[1].Course,
+                                Speed: item[1].Speed,
+                                DeviceInfo: allDevices.Items.find(a => a.ID == item[0]),
+                                ID: item[0],
+                                Plate: plateNumber,
+                                LastTime: item[1]._LastData,
+                                IconPath: parm.Urls.ImageCar + "/" + imageName,
+                            }
                         }
-                    });
+                    );
                     resolve(online.filter(a => !!a));
                 }
             });
