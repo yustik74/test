@@ -63,8 +63,7 @@ function createMarker(item) {
         let info = formatMarkerInfo(item);
         item.Alias = info;
         item.showLabel = false;
-        let canvasElement = document.createElement('canvas');
-        let image = await getMarkerImage(canvasElement, item);
+        let image = await getMarkerImage(item);
         let marker = L.marker([item.LastPosition.Lat, item.LastPosition.Lng], {
             icon: L.icon({
                 iconUrl: image.image,

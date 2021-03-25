@@ -335,10 +335,12 @@
                             if (item[1].Final.AppCityServiceVisible == false)
                                 return null;
                             let imageName = "sedan.png";
-                            if (!!deviceInfo) {
+                            if (deviceInfo) {
                                 plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
-                                if (!!deviceInfo.Image)
-                                    imageName = deviceInfo.Image;
+                                if (deviceInfo.ImageColored) {
+                                    imageName = deviceInfo.ImageColored;
+                                    console.log(imageName);
+                                }
                             } else
                                 plateNumber = "";
                             return {

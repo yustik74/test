@@ -1,29 +1,62 @@
-function getMarkerImage(canvasElement, car) {
+function getMarkerImage(car) {
     return new Promise(async (resolve) => {
-        canvasElement.width = 48;
-        canvasElement.height = 96;
-        let context = canvasElement.getContext('2d');
-        let xPos = canvasElement.width / 2;
-        let yPos = canvasElement.height / 4 * 3;
+        let resultCanvasElement = document.createElement('canvas');
+        resultCanvasElement.width = 48;
+        resultCanvasElement.height = 96;
+        let context = resultCanvasElement.getContext('2d');
+
+        let iconCanvasElement = document.createElement('canvas');
+        iconCanvasElement.width = 48;
+        iconCanvasElement.height = 48;
+        let iconContext = iconCanvasElement.getContext('2d');
+
+        let iconBackgroundCanvasElement = document.createElement('canvas');
+        iconBackgroundCanvasElement.width = 48;
+        iconBackgroundCanvasElement.height = 48;
+        let iconBackgroundContext = iconBackgroundCanvasElement.getContext('2d');
+
+        let cursorCanvasElement = document.createElement('canvas');
+        cursorCanvasElement.width = 48;
+        cursorCanvasElement.height = 48;
+        let cursorContext = cursorCanvasElement.getContext('2d');
+
+        let cursorBackgroundCanvasElement = document.createElement('canvas');
+        cursorBackgroundCanvasElement.width = 48;
+        cursorBackgroundCanvasElement.height = 48;
+        let cursorBackgroundContext = cursorBackgroundCanvasElement.getContext('2d');
+
+        let xPos = iconCanvasElement.width / 2;
+        let yPos = iconCanvasElement.height / 4 * 3;
         if (markerType == 0) {
-            let anchor = await drawDefaultCursor(canvasElement, context, car);
+            let anchor = await drawDefaultCursor(resultCanvasElement, context, car);
             xPos = anchor[0];
             yPos = anchor[1];
         } else {
-
             await new Promise(async (resolve) => {
-                let anchor = await drawCursorIcon(canvasElement, context, car);
-                await drawCursorBackground(canvasElement, context, car);
-                await drawIconBackground(canvasElement, context);
-                await drawIcon(canvasElement, context, car);
+                let anchor = await drawCursorBackground(cursorBackgroundCanvasElement, cursorBackgroundContext, car);
+                await drawCursorIcon(cursorCanvasElement, cursorContext, car);
+                await drawIconBackground(iconBackgroundCanvasElement, iconBackgroundContext);
+                await drawIcon(iconCanvasElement, iconContext, car);
                 if (anchor) {
                     xPos = anchor[0];
                     yPos = anchor[1];
                 }
+                let iconWidth = Math.max(iconCanvasElement.width, iconBackgroundCanvasElement.width);
+                let iconHeight = Math.max(iconCanvasElement.height, iconBackgroundCanvasElement.height);
+                let cursorWidth = Math.max(cursorCanvasElement.width, cursorBackgroundCanvasElement.width);
+                let cursorHeight = Math.max(cursorCanvasElement.height, cursorBackgroundCanvasElement.height)
+                resultCanvasElement.width = Math.max(iconWidth, cursorWidth);
+                resultCanvasElement.height = iconHeight + cursorHeight;
+                xPos = cursorBackgroundCanvasElement.width / 2;
+                yPos = cursorBackgroundCanvasElement.height / 2 + iconHeight;
+                context.drawImage(iconBackgroundCanvasElement, 0, 0);
+                context.drawImage(iconCanvasElement, 0, 0);
+                context.drawImage(cursorBackgroundCanvasElement, 0, iconHeight);
+                context.drawImage(cursorCanvasElement, 0, iconHeight);
                 resolve();
             });
         }
-        resolve({image: canvasElement.toDataURL(), anchorX: xPos, anchorY: yPos});
+        resolve({image: resultCanvasElement.toDataURL(), anchorX: xPos, anchorY: yPos});
     });
 }
 
@@ -41,39 +74,43 @@ function drawDefaultCursor(canvasElement, context, car) {
     });
 }
 
-function drawCursorIcon(canvasElement, context, car) {
+function drawCursorBackground(canvasElement, context, car) {
     let xPos = 0;
     let yPos = 0;
     return new Promise(async (resolve) => {
         if (flagIsSet(cursorIconSet) && parm.Settings['CursorBackgroundPath'] != none) {
             let cursorCanvasElement;
             if (parm.Settings['CursorBackgroundPath'] == auto) {
-                let defaultCursor = await getDefaultArrowCursor(canvasElement.width, car, cursorColor);
-                xPos = defaultCursor.anchorX;
-                yPos = defaultCursor.anchorY + canvasElement.height / 2;
+                let defaultCursor = await getDefaultArrowCursor(48, car, cursorColor);
+                canvasElement.width = defaultCursor.image.width;
+                canvasElement.height = defaultCursor.image.height;
                 cursorCanvasElement = defaultCursor.image;
             } else {
                 let image = await getImage(parm.Urls.Content + parm.Settings['CursorBackgroundPath']);
-                xPos = canvasElement.width / 2;
-                yPos = canvasElement.height * 3 / 4;
-                cursorCanvasElement = getRotatedCursor(image, canvasElement.width, canvasElement.height / 2, car.Course);
+                canvasElement.width = image.width;
+                canvasElement.height = image.height;
+                cursorCanvasElement = getRotatedCursor(image, car.Course);
             }
-            context.drawImage(cursorCanvasElement, 0, canvasElement.height / 2, canvasElement.width, canvasElement.height / 2);
+            context.drawImage(cursorCanvasElement, 0, 0);
+            xPos = canvasElement.width / 2;
+            yPos = canvasElement.height / 2;
             resolve([xPos, yPos]);
         } else
             resolve();
     });
 }
 
-function drawCursorBackground(canvasElement, context, car) {
+function drawCursorIcon(canvasElement, context, car) {
     return new Promise(async (resolve) => {
         if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorIconPath'] != none) {
             let image;
             if (parm.Settings['CursorIconPath'] == auto)
-                image = await getIcon(canvasElement.width, car.IconPath);
-            else
-                image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
-            context.drawImage(image, 0, canvasElement.height / 2, canvasElement.width, canvasElement.height / 2);
+                //image = await getIcon(canvasElement.width, car.IconPath);
+                resolve();
+            image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
+            canvasElement.width = Math.max(image.width, canvasElement.width);
+            canvasElement.height = Math.max(image.height, canvasElement.height);
+            context.drawImage(image, 0, 0);
             resolve();
         } else
             resolve();
@@ -83,13 +120,15 @@ function drawCursorBackground(canvasElement, context, car) {
 function drawIconBackground(canvasElement, context) {
     return new Promise(async (resolve) => {
         if (flagIsSet(iconBackgroundSet) && parm.Settings['IconBackgroundPath'] != none) {
+            let image;
             if (parm.Settings['IconBackgroundPath'] == auto) {
-                let background = await getDefaultIconBackground(canvasElement.width);
-                context.drawImage(background, canvasElement.width * 0.175, 0, canvasElement.width, canvasElement.height / 2);
+                image = await getDefaultIconBackground(canvasElement.width);
             } else {
-                let image = await getImage(parm.Urls.Content + parm.Settings['IconBackgroundPath']);
-                context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
+                image = await getImage(parm.Urls.Content + parm.Settings['IconBackgroundPath']);
             }
+            canvasElement.width = Math.max(image.width, canvasElement.width);
+            canvasElement.height = Math.max(image.height, canvasElement.height);
+            context.drawImage(image, 0, 0);
             resolve();
         } else
             resolve();
@@ -102,19 +141,22 @@ function drawIcon(canvasElement, context, car) {
             let image;
             if (parm.Settings['IconPath'] == auto) {
                 image = await getIcon(canvasElement.width, car.IconPath, 3)
-            } else
+            } else {
                 image = await getImage(parm.Urls.Content + parm.Settings['IconPath']);
-            context.drawImage(image, 0, 0, canvasElement.width, canvasElement.height / 2);
+            }
+            canvasElement.width = Math.max(image.width, canvasElement.width);
+            canvasElement.height = Math.max(image.height, canvasElement.height);
+            context.drawImage(image, 0, 0);
             resolve();
         } else
             resolve();
     });
 }
 
-function getRotatedCursor(image, width, height, angle) {
+function getRotatedCursor(image, angle) {
     let cursorCanvasElement = document.createElement('canvas');
-    cursorCanvasElement.width = width;
-    cursorCanvasElement.height = height;
+    cursorCanvasElement.width = image.width;
+    cursorCanvasElement.height = image.height;
     let offsetWidth = cursorCanvasElement.width / 2;
     let offsetHeight = cursorCanvasElement.height / 2;
     let cursorContext = cursorCanvasElement.getContext('2d');
@@ -169,14 +211,15 @@ function getDefaultIconBackground(boubleWidth) {
         let canvas = document.createElement('canvas');
         canvas.width = boubleWidth;
         canvas.height = boubleWidth;
+        let sizeCoef = 0.65;
         let context = canvas.getContext('2d');
-        let xStart = 0,
+        let xStart = (canvas.width - canvas.width * sizeCoef) / 2,
             boubleRoundSize = 4,
             boubleArrowSize = 36 / 2.5,
             boubleBg = "rgba(255,255,255,.75)",
             borderColor = "#cccccc",
             borderWidth = 1;
-        let size = boubleWidth * 0.65;
+        let size = boubleWidth * sizeCoef;
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.translate(xStart, 0);
         context.beginPath();
@@ -247,6 +290,9 @@ function getImage(iconPath) {
             carImage.onload = function () {
                 cache.cars[iconPath] = carImage;
                 resolve(cache.cars[iconPath]);
+            };
+            carImage.onerror = function () {
+                console.log('Error download ' + iconPath);
             };
         } else {
             resolve(cache.cars[iconPath]);
