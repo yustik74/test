@@ -32,15 +32,29 @@
     <script src="js/drawing.js"></script>
     <script src="https://kendo.cdn.telerik.com/2021.1.119/js/kendo.all.min.js"></script>
     <script src="external-settings.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 <div style="position: fixed; width: 100%; height: 100%;" id="map"></div>
 <div class="controlWrapper" id="form">
     <div class="container">
-        <div id="logoDiv" style="text-align: center; margin-bottom: 10px; width: 100%" hidden="true">
+        <div id="logoDiv" hidden="true">
             <img id="logo" src="">
         </div>
-        <div id="mainGroups">
+        <div id="orgs" style="padding-top: 10px">
+            <div id="mainGroups">
+                <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
+                    <input data-role="dropdownlist"
+                           data-auto-bind="false"
+                           data-value-primitive="true"
+                           data-text-field="Name" data-value-field="ID"
+                           data-bind="
+                                                value:ID,
+                                                source:Groups,
+                                                events: {change: onChange}"/>
+                    </span>
+            </div>
+            <div id="childrenGroups">
         <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
             <input data-role="dropdownlist"
                    data-auto-bind="false"
@@ -51,47 +65,32 @@
                                         source:Groups,
                                         events: {change: onChange}"/>
             </span>
+            </div>
         </div>
-        <div id="childrenGroups">
-        <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
-            <input data-role="dropdownlist"
-                   data-auto-bind="false"
-                   data-value-primitive="true"
-                   data-text-field="Name" data-value-field="ID"
-                   data-bind="
-                                        value:ID,
-                                        source:Groups,
-                                        events: {change: onChange}"/>
-            </span>
-        </div>
-        <div id="statistics" style="padding-top: 10px">
-            <div class="col-xs-12 semi-white">
-                Всего машин
-                <hr>
+        <div class="stats" id="statistics" >
+            <div class="col-xs-12 semi-white">Всего машин<hr>
             </div>
             <div id="allTrucks" class="col-xs-3 semi-white">
             </div>
-            <div class="col-xs-12" style="padding: 0; background-color: rgba(255,255,255,.3); width: 100%">
+            <div class="col-xs-12 progressDiv" >
                 <div id="totalProgress"
                      data-role="progressbar"
                      data-min="0"
                      data-bind="enabled: isEnabled,
                             value: totalCarsInGroup"
-                     style="width: 100%; background-color: #ccc; height: 20px;"></div>
+                     ></div>
             </div>
-            <div class="col-xs-12 semi-white" style="margin-top: 10px;">
-                Машин на линии
-                <hr>
+            <div class="col-xs-12 semi-white" id="carsstats">Машин на линии<hr>
             </div>
             <div id="allTrucksOnline" class="col-xs-3 semi-white">
             </div>
-            <div class="col-xs-12" style="padding: 0; background-color: rgba(255,255,255,.3); width: 100%;">
+            <div class="col-xs-12 progressDiv">
                 <div id="onlineProgress"
                      data-role="progressbar"
                      data-min="0"
                      data-bind="enabled: isEnabled,
                             value: carsInGroupOnline"
-                     style="width: 100%; background-color: #ccc; height: 20px;"></div>
+                     ></div>
             </div>
         </div>
     </div>
@@ -103,6 +102,14 @@
 
     let mapObject = InitMap('map', parm.Settings['ClusterSize'], defaultView);
     let bounds = [];
+
+    let hideForm = parm.Settings['HideForm'] == 'true' ? true : false;
+    let hideOrgs = parm.Settings['HideOrgs'] == 'true' ? true : false;
+    let hideStats = parm.Settings['HideStats'] == 'true' ? true : false;
+
+    setHidden('form', hideForm);
+    setHidden('orgs', hideOrgs);
+    setHidden('statistics', hideStats);
 
     if (!!parm.Settings.LogoUrl) {
         let logoEl = document.getElementById("logo");
@@ -412,6 +419,16 @@
         else if (difference < 86400)
             return round(difference / 3600, 0) + " h";
         else return round(difference / 86400, 0) + " d";
+    }
+
+    function setHidden(id, state) {
+        let element = document.getElementById(id);
+        if (element) {
+            if (state)
+                element.setAttribute('hidden', state)
+            else
+                element.removeAttribute('hidden');
+        }
     }
 </script>
 </body>

@@ -9,6 +9,21 @@ html, body, #map {
     width: 100%;
 }
 
+.controlWrapper .container .logoDiv {
+    text-align: center;
+    width: 100%;
+}
+
+#carsstats {
+    margin-top: 10px;
+}
+
+#progressDiv {
+    padding: 0;
+    background-color: rgba(255, 255, 255, .3);
+    width: 100%
+}
+
 .controlWrapper {
     position: fixed;
     width: 300px;
@@ -16,34 +31,26 @@ html, body, #map {
     top: 20px;
     background-color: rgba(0, 0, 0, .75);
     border-radius: 10px;
-    padding: 10px 0;
-    height: 230px;
+    padding: 15px 0 15px;
+    height: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
-#logo {
-    height: 35%;
+.k-dropdown, .k-dropdowntree {
+    height: 30px;
 }
 
-@media (max-width: 1024px) {
-    .controlWrapper {
-        position: fixed;
-        width: 100%;
-        top: 0px;
-        left: 0px;
-        right: 0px;
-        background-color: rgba(0, 0, 0, .75);
-        border-radius: 0;
-        padding: 5px 0;
-        height: 230px;
-    }
+.k-progressbar-horizontal {
+    height: 20px;
+    width: 100%;
+    background-color: #ccc;
+}
 
-    .container {
-        padding-right: 5px;
-        padding-left: 5px;
-        margin-right: auto;
-        margin-left: auto;
-        height: 30%;
-    }
+#col-xs-12 .totalProgress {
+    width: 100%;
+    background-color: #ccc;
+    height: 50px;
 }
 
 .container {
@@ -51,6 +58,88 @@ html, body, #map {
     padding-left: 15px;
     margin-right: auto;
     margin-left: auto;
+    height: auto;
+}
+
+.orgs {
+    padding-bottom: 10px;
+}
+
+#logo {
+    width: 35%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#statistics {
+    padding-top: 10px;
+}
+@media screen and (max-width: 1024px) {
+    .controlWrapper {
+        position: fixed;
+        width: 100%;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+
+        border-radius: 0;
+        font-size: 70%;
+        margin-top: 0;
+    }
+}
+
+@media screen and (max-width: 1024px) and (orientation: landscape){
+    #logo {
+        width: 10%;
+    }
+
+    .controlWrapper {
+        position: fixed;
+        width: 100%;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        border-radius: 0;
+        font-size: 40%;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .k-dropdown, .k-dropdowntree {
+        height: 20px;
+        margin-bottom: 2px;
+        font-size: 140%;
+    }
+
+    .k-progressbar-horizontal {
+        height: 10px;
+        width: 100%;
+        background-color: #ccc;
+    }
+
+    #col-xs-12 .totalProgress {
+        width: 100%;
+        background-color: #ccc;
+        height: 15px;
+    }
+
+    .container {
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: auto;
+        margin-left: auto;
+        height: auto;
+    }
+
+    #statistics {
+        padding-top: 5px;
+    }
+
+    #carsstats {
+        margin-top: 5px;
+    }
+
 }
 
 .semi-white {
