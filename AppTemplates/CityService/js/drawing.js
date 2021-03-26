@@ -1,3 +1,11 @@
+const cursorIconSet = 1;
+const cursorBackgroundSet = 2;
+const iconSet = 4;
+const iconBackgroundSet = 8;
+const auto = 'auto';
+const none = 'none';
+const defaultColor = 'ff0000';
+
 function getMarkerImage(car) {
     return new Promise(async (resolve) => {
         let resultCanvasElement = document.createElement('canvas');
@@ -35,8 +43,13 @@ function getMarkerImage(car) {
             await new Promise(async (resolve) => {
                 let anchor = await drawCursorBackground(cursorBackgroundCanvasElement, cursorBackgroundContext, car);
                 await drawCursorIcon(cursorCanvasElement, cursorContext, car);
-                await drawIconBackground(iconBackgroundCanvasElement, iconBackgroundContext);
-                await drawIcon(iconCanvasElement, iconContext, car);
+
+                let iconBackground = await drawIconBackground(iconBackgroundCanvasElement, iconBackgroundContext);
+                if (iconBackground)
+                    await drawIcon(iconCanvasElement, iconContext, car, iconBackground.width);
+                else
+                    await drawIcon(iconCanvasElement, iconContext, car);
+
                 if (anchor) {
                     xPos = anchor[0];
                     yPos = anchor[1];
@@ -49,10 +62,25 @@ function getMarkerImage(car) {
                 resultCanvasElement.height = iconHeight + cursorHeight;
                 xPos = cursorBackgroundCanvasElement.width / 2;
                 yPos = cursorBackgroundCanvasElement.height / 2 + iconHeight;
-                context.drawImage(iconBackgroundCanvasElement, 0, 0);
-                context.drawImage(iconCanvasElement, 0, 0);
-                context.drawImage(cursorBackgroundCanvasElement, 0, iconHeight);
-                context.drawImage(cursorCanvasElement, 0, iconHeight);
+
+                let offset = 0;
+                if (parm.Settings['IconBackgroundPath'] == auto)
+                    offset = 0.35;
+
+                if (iconBackgroundCanvasElement.width != 0 && iconBackgroundCanvasElement.height != 0)
+                    context.drawImage(iconBackgroundCanvasElement, 0, iconBackgroundCanvasElement.height * offset);
+
+                if (iconCanvasElement.width != 0 && iconCanvasElement.height != 0)
+                    context.drawImage(iconCanvasElement, 0, iconCanvasElement.height * offset);
+
+                let xOffset = (iconWidth - cursorWidth) / 2;
+                if (xOffset <= 0)
+                    xOffset = 0;
+                xPos += xOffset;
+                if (cursorBackgroundCanvasElement.width != 0 && cursorBackgroundCanvasElement.height != 0)
+                    context.drawImage(cursorBackgroundCanvasElement, xOffset, iconHeight);
+                if (cursorCanvasElement.width != 0 && cursorCanvasElement.height != 0)
+                    context.drawImage(cursorCanvasElement, xOffset, iconHeight);
                 resolve();
             });
         }
@@ -61,16 +89,12 @@ function getMarkerImage(car) {
 }
 
 function drawDefaultCursor(canvasElement, context, car) {
-    let xPos = 0;
-    let yPos = 0;
     return new Promise(async (resolve) => {
-        let image = await getDefaultArrowCursor(canvasElement.width, car, cursorColor);
-        context.drawImage(image.image, 0, canvasElement.height / 2);
-        xPos = image.anchorX;
-        yPos = image.anchorY + canvasElement.height / 2;
-        let imageCar = await getIcon(canvasElement.width, car.IconPath);
-        context.drawImage(imageCar, 0, canvasElement.height / 2);
-        resolve([xPos, yPos]);
+        let image = await getDefaultArrowCursor(canvasElement.width, car);
+        context.drawImage(image.image, 0, 0);
+        //let imageCar = await getIcon(canvasElement.width, car.IconPath);
+        //context.drawImage(imageCar, 0, canvasElement.height / 2);
+        resolve([image.anchorX, image.anchorY]);
     });
 }
 
@@ -81,12 +105,13 @@ function drawCursorBackground(canvasElement, context, car) {
         if (flagIsSet(cursorIconSet) && parm.Settings['CursorBackgroundPath'] != none) {
             let cursorCanvasElement;
             if (parm.Settings['CursorBackgroundPath'] == auto) {
-                let defaultCursor = await getDefaultArrowCursor(48, car, cursorColor);
+                let defaultCursor = await getDefaultArrowCursor(48, car);
                 canvasElement.width = defaultCursor.image.width;
                 canvasElement.height = defaultCursor.image.height;
                 cursorCanvasElement = defaultCursor.image;
             } else {
                 let image = await getImage(parm.Urls.Content + parm.Settings['CursorBackgroundPath']);
+                console.log('Getting cursor background ' + parm.Settings['CursorBackgroundPath']);
                 canvasElement.width = image.width;
                 canvasElement.height = image.height;
                 cursorCanvasElement = getRotatedCursor(image, car.Course);
@@ -104,13 +129,12 @@ function drawCursorIcon(canvasElement, context, car) {
     return new Promise(async (resolve) => {
         if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorIconPath'] != none) {
             let image;
-            if (parm.Settings['CursorIconPath'] == auto)
-                //image = await getIcon(canvasElement.width, car.IconPath);
-                resolve();
-            image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
-            canvasElement.width = Math.max(image.width, canvasElement.width);
-            canvasElement.height = Math.max(image.height, canvasElement.height);
-            context.drawImage(image, 0, 0);
+            if (parm.Settings['CursorIconPath'] !== auto) {
+                image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
+                canvasElement.width = Math.max(image.width, canvasElement.width);
+                canvasElement.height = Math.max(image.height, canvasElement.height);
+                context.drawImage(image, 0, 0);
+            }
             resolve();
         } else
             resolve();
@@ -121,26 +145,33 @@ function drawIconBackground(canvasElement, context) {
     return new Promise(async (resolve) => {
         if (flagIsSet(iconBackgroundSet) && parm.Settings['IconBackgroundPath'] != none) {
             let image;
+            let result;
             if (parm.Settings['IconBackgroundPath'] == auto) {
-                image = await getDefaultIconBackground(canvasElement.width);
+                result = await getDefaultIconBackground();
+                image = result.image;
             } else {
                 image = await getImage(parm.Urls.Content + parm.Settings['IconBackgroundPath']);
             }
             canvasElement.width = Math.max(image.width, canvasElement.width);
             canvasElement.height = Math.max(image.height, canvasElement.height);
             context.drawImage(image, 0, 0);
+            if (result)
+                resolve({width: result.width, margin: result.margin});
             resolve();
         } else
             resolve();
     });
 }
 
-function drawIcon(canvasElement, context, car) {
+function drawIcon(canvasElement, context, car, width) {
     return new Promise(async (resolve) => {
         if (flagIsSet(iconSet) && parm.Settings['IconPath'] != none) {
             let image;
             if (parm.Settings['IconPath'] == auto) {
-                image = await getIcon(canvasElement.width, car.IconPath, 3)
+                if (width)
+                    image = await getIcon(canvasElement.width, car.IconPath, 0.70, width);
+                else
+                    image = await getIcon(canvasElement.width, car.IconPath, 0.70);
             } else {
                 image = await getImage(parm.Urls.Content + parm.Settings['IconPath']);
             }
@@ -192,34 +223,41 @@ function drawBorder(ctx, width, height, roundSize, pipkaSize) {
     ctx.arc(roundSize, roundSize, roundSize, PI2 / 2, -PI2 / 4); // left top corner
 }
 
-function getIcon(sideSize, iconPath, marginY) {
+function getIcon(sideSize, iconPath, scale, width) {
     return new Promise((resolve) => {
         let canvas = document.createElement('canvas');
         canvas.width = canvas.height = sideSize;
         let context = canvas.getContext('2d');
-        let margin = sideSize * 0.25;
-        let size = sideSize * 0.5;
+        let size = sideSize * scale;
+        let margin;
+        if (width)
+            margin = (width - size) / 2;
+        else
+            margin = (sideSize - size) / 2;
         getImage(iconPath).then(function (image) {
-            context.drawImage(image, margin, marginY !== undefined ? marginY : margin, size, size);
+            context.drawImage(image, margin, margin, size, size);
             resolve(canvas);
         });
     });
 }
 
-function getDefaultIconBackground(boubleWidth) {
+function getDefaultIconBackground() {
     return new Promise((resolve) => {
-        let canvas = document.createElement('canvas');
-        canvas.width = boubleWidth;
-        canvas.height = boubleWidth;
-        let sizeCoef = 0.65;
-        let context = canvas.getContext('2d');
-        let xStart = (canvas.width - canvas.width * sizeCoef) / 2,
+        let carImageSize = window.devicePixelRatio > 1 ? 40 : 32,
+            boubleWidth = carImageSize + 6,
+            boubleHeight = boubleWidth * 1.5,
             boubleRoundSize = 4,
-            boubleArrowSize = 36 / 2.5,
+            boubleArrowSize = carImageSize / 2.5,
             boubleBg = "rgba(255,255,255,.75)",
             borderColor = "#cccccc",
             borderWidth = 1;
-        let size = boubleWidth * sizeCoef;
+        let size = boubleWidth;
+        let canvas = document.createElement('canvas');
+        canvas.width = boubleWidth + borderWidth * 2;
+        canvas.height = boubleHeight;
+        let context = canvas.getContext('2d');
+
+        let xStart = borderWidth / 2;
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.translate(xStart, 0);
         context.beginPath();
@@ -228,13 +266,18 @@ function getDefaultIconBackground(boubleWidth) {
         context.fillStyle = boubleBg;
         drawBorder(context, size, size, boubleRoundSize, boubleArrowSize);
         context.fill();
-        drawBorder(context, size, size, boubleRoundSize, boubleArrowSize);
+        //drawBorder(context, size, size, boubleRoundSize, boubleArrowSize);
         context.stroke();
-        resolve(canvas);
+        let resultCanvas = document.createElement('canvas');
+        resultCanvas.width = Math.max(48, canvas.width);
+        resultCanvas.height = Math.max(48, canvas.height);
+        let resultCtx = resultCanvas.getContext('2d');
+        resultCtx.drawImage(canvas, (resultCanvas.width - size) / 2, 0);
+        resolve({image: resultCanvas, width: boubleWidth, margin: (resultCanvas.width - size) / 2});
     });
 }
 
-function getDefaultArrowCursor(sideSize, car, cursorColor) {
+function _getDefaultArrowCursor(sideSize, car, cursorColor) {
     return new Promise((resolve) => {
         let resultCanvas = document.createElement('canvas');
         resultCanvas.width = sideSize;
@@ -256,7 +299,7 @@ function getDefaultArrowCursor(sideSize, car, cursorColor) {
         context.beginPath();
         context.arc(0, 0, r, 0, 2 * Math.PI, false);
         context.lineWidth = lineWidth;
-        context.strokeStyle = cursorColor;
+        context.strokeStyle = '#' + cursorColor;
         context.stroke();
         context.fillStyle = '#ffffff';
         context.fill();
@@ -298,9 +341,109 @@ function getImage(iconPath) {
             resolve(cache.cars[iconPath]);
         }
     });
-
 }
 
 function calculateRadian(degrees) {
     return degrees * Math.PI / 180;
+}
+
+function getDefaultArrowCursor(sideSize, car) {
+    return new Promise((resolve) => {
+        // --- Arrow
+        let cursorColor = getColorFromImageLink(car.IconPath);
+        let carImageSize = window.devicePixelRatio > 1 ? 40 : 32;
+        let carArrowSize = 26;
+        let carArrowSizeMax = Math.ceil(Math.sqrt(2 * Math.pow(carArrowSize, 2))) + 4; // Max arrow size on rotate
+        let canvasElement = document.createElement('canvas');
+        canvasElement.width = carArrowSizeMax;
+        canvasElement.height = sideSize;
+        let ctxArrow = canvasElement.getContext('2d');
+        let x = sideSize / 2,
+            y = sideSize / 2;
+
+        if (car.Course == -1) {
+            drawPosition(ctxArrow, x, y, carArrowSize / 2, '#' + cursorColor);
+        } else {
+            const borderWidth = 2;
+            const size = carArrowSize - borderWidth * 2;
+
+            ctxArrow.setTransform(1, 0, 0, 1, 0, 0);
+            ctxArrow.save();
+            ctxArrow.translate(x, y);
+            ctxArrow.rotate(calculateRadian(car.Course));
+            ctxArrow.translate(-size / 2, -size / 2);
+            drawArrow(ctxArrow, size, '#' + cursorColor, borderWidth, '#000');
+            ctxArrow.restore();
+        }
+        resolve({image: canvasElement, anchorX: x, anchorY: y});
+    });
+}
+
+function drawPosition(ctx, x, y, size, color) {
+
+    // --- shadow --
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, 2 * Math.PI, false);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, 2 * Math.PI, false);
+    ctx.stroke();
+
+    // --- circle ---
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, 2 * Math.PI, false);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, 2 * Math.PI, false);
+    ctx.stroke();
+}
+
+function drawArrow(ctx, size, color, borderWidth, borderColor) {
+    ctx.lineWidth = borderWidth;
+    ctx.strokeStyle = borderColor;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(size / 2, 0);
+    ctx.lineTo(size, size);
+    ctx.lineTo(size / 2, size * 0.75);
+    ctx.lineTo(0, size);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth--;
+    ctx.beginPath();
+    ctx.moveTo(size / 2, borderWidth);
+    ctx.lineTo(size - borderWidth, size - borderWidth);
+    ctx.lineTo(size / 2, size * 0.75 - borderWidth + 1);
+    ctx.lineTo(borderWidth, size - borderWidth);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+function getColorFromImageLink(link) {
+    //http://localhost/image/car/gaz3/default/ff00ff/64/backlayer/ffffff
+    let linkLowerCase = link.toLowerCase();
+    let splitString = linkLowerCase.split('/');
+    for (let counter = 1; counter < splitString.length; counter++) {
+
+        if (splitString[counter] == 'car' && splitString[counter - 1] == 'image' && splitString.length >= counter + 3) {
+            if (splitString[counter + 3] == 'transparent')
+                return defaultColor;
+            return splitString[counter + 3];
+        }
+    }
+    return defaultColor;
 }

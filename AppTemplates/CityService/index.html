@@ -67,20 +67,22 @@
             </span>
             </div>
         </div>
-        <div class="stats" id="statistics" >
-            <div class="col-xs-12 semi-white">Всего машин<hr>
+        <div class="stats" id="statistics">
+            <div class="col-xs-12 semi-white">Всего машин
+                <hr>
             </div>
             <div id="allTrucks" class="col-xs-3 semi-white">
             </div>
-            <div class="col-xs-12 progressDiv" >
+            <div class="col-xs-12 progressDiv">
                 <div id="totalProgress"
                      data-role="progressbar"
                      data-min="0"
                      data-bind="enabled: isEnabled,
                             value: totalCarsInGroup"
-                     ></div>
+                ></div>
             </div>
-            <div class="col-xs-12 semi-white" id="carsstats">Машин на линии<hr>
+            <div class="col-xs-12 semi-white" id="carsstats">Машин на линии
+                <hr>
             </div>
             <div id="allTrucksOnline" class="col-xs-3 semi-white">
             </div>
@@ -90,7 +92,7 @@
                      data-min="0"
                      data-bind="enabled: isEnabled,
                             value: carsInGroupOnline"
-                     ></div>
+                ></div>
             </div>
         </div>
     </div>
@@ -275,6 +277,7 @@
                         Speed: device.Speed,
                         Plate: device.Plate,
                         LastTime: device.LastTime,
+                        Color: device.Color,
                         IconPath: device.IconPath,
                     };
 
@@ -335,16 +338,20 @@
                             if (item[1].Final.AppCityServiceVisible == false)
                                 return null;
                             let imageName = "sedan.png";
+                            let color = 'FF0000';
                             if (deviceInfo) {
                                 plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
                                 if (deviceInfo.ImageColored) {
-                                    imageName = deviceInfo.ImageColored;
-                                    console.log(imageName);
+                                    {
+                                        imageName = deviceInfo.ImageColored;
+                                        color = imageName.slice(imageName.length - 6, imageName.length);
+                                    }
                                 }
                             } else
                                 plateNumber = "";
                             return {
                                 LastPosition: item[1].LastPosition,
+                                Color: color,
                                 Name: item[1].Name,
                                 Course: item[1].Course,
                                 Speed: item[1].Speed,

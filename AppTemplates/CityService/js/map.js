@@ -1,11 +1,4 @@
 let moveAnimationLastTimeLimit = 3600 * 24 * 7;
-const cursorIconSet = 1;
-const cursorBackgroundSet = 2;
-const iconSet = 4;
-const iconBackgroundSet = 8;
-const auto = 'auto';
-const none = 'none';
-let cursorColor = '#000280';
 
 let markerType = 0;
 let cache = { // Images elements for canvas
@@ -80,8 +73,7 @@ function updateMarker(item) {
         let info = formatMarkerInfo(item);
         item.Alias = info;
         item.showLabel = false;
-        let canvasElement = document.createElement('canvas');
-        let image = await getMarkerImage(canvasElement, item);
+        let image = await getMarkerImage(item);
         item.Marker.setIcon(L.icon({
             iconUrl: image.image,
             iconAnchor: [image.anchorX, image.anchorY],
