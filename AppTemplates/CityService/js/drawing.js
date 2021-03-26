@@ -63,6 +63,11 @@ function getMarkerImage(car) {
                 xPos = cursorBackgroundCanvasElement.width / 2;
                 yPos = cursorBackgroundCanvasElement.height / 2 + iconHeight;
 
+                let xOffset = (iconWidth - cursorWidth) / 2;
+                if (xOffset <= 0)
+                    xOffset = 0;
+                xPos += xOffset;
+
                 let offset = 0;
                 if (parm.Settings['IconBackgroundPath'] == auto)
                     offset = 0.35;
@@ -71,12 +76,11 @@ function getMarkerImage(car) {
                     context.drawImage(iconBackgroundCanvasElement, 0, iconBackgroundCanvasElement.height * offset);
 
                 if (iconCanvasElement.width != 0 && iconCanvasElement.height != 0)
-                    context.drawImage(iconCanvasElement, 0, iconCanvasElement.height * offset);
+                    if (iconBackground)
+                        context.drawImage(iconCanvasElement, iconBackground.margin, iconBackgroundCanvasElement.height * offset );
+                    else
+                        context.drawImage(iconCanvasElement, 0, iconBackgroundCanvasElement.height * offset + (iconBackgroundCanvasElement.height - iconCanvasElement.height) / 2);
 
-                let xOffset = (iconWidth - cursorWidth) / 2;
-                if (xOffset <= 0)
-                    xOffset = 0;
-                xPos += xOffset;
                 if (cursorBackgroundCanvasElement.width != 0 && cursorBackgroundCanvasElement.height != 0)
                     context.drawImage(cursorBackgroundCanvasElement, xOffset, iconHeight);
                 if (cursorCanvasElement.width != 0 && cursorCanvasElement.height != 0)
