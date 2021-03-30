@@ -422,12 +422,12 @@
     function getTimeDifferenceString(oldDate) {
         let difference = getTimeDifferenceInSeconds(oldDate);
         if (difference < 60)
-            return round(difference, 0) + " s";
+            return round(difference, 0) + " с";
         else if (difference < 3600)
-            return round(difference / 60, 0) + " min";
+            return round(difference / 60, 0) + " мин";
         else if (difference < 86400)
-            return round(difference / 3600, 0) + " h";
-        else return round(difference / 86400, 0) + " d";
+            return round(difference / 3600, 0) + " ч";
+        else return round(difference / 86400, 0) + " д";
     }
 
     function setHidden(id, state) {

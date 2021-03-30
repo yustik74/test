@@ -85,8 +85,8 @@ function updateMarker(item) {
 }
 
 function formatMarkerInfo(item) {
-    return "<b>" + item.Name + "</b>"
+    return "<p><b>" + item.Name + "</b>"
         + " " + item.Plate
-        + "<br>Скорость: " + round(item.Speed, 2) + " км/ч<br>Состояние: " + getStateName(item.Speed)
-        + "<br>Последняя активность: " + getTimeDifferenceString(item.LastTime);
+        + "</p><p>Скорость: " + round(item.Speed, 2) + " км/ч<br>Состояние: " + getStateName(item.Speed)
+        + "</p><p>Последняя активность: " + getTimeDifferenceString(item.LastTime) + "</p>";
 }
