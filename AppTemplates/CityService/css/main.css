@@ -9,6 +9,11 @@ html, body, #map {
     width: 100%;
 }
 
+canvas {
+    font-smooth: never;
+    -webkit-font-smoothing : none;
+}
+
 .controlWrapper .container .logoDiv {
     text-align: center;
     width: 100%;

@@ -5,6 +5,7 @@ const iconBackgroundSet = 8;
 const auto = 'auto';
 const none = 'none';
 const defaultColor = 'ff0000';
+const smooth = true;
 
 function getMarkerImage(car) {
     return new Promise(async (resolve) => {
@@ -12,21 +13,20 @@ function getMarkerImage(car) {
         let resultCanvasElement = document.createElement('canvas');
         resultCanvasElement.width = defaultSize;
         resultCanvasElement.height = defaultSize * 2;
-        resultCanvasElement.style = 'image-rendering: pixelated;';
         let context = resultCanvasElement.getContext('2d');
-        context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = true;
+        context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = smooth;
 
         let iconCanvasElement = document.createElement('canvas');
         iconCanvasElement.width = defaultSize;
         iconCanvasElement.height = defaultSize;
-        iconCanvasElement.style = 'image-rendering: pixelated;';
         let iconContext = iconCanvasElement.getContext('2d');
-        iconContext.imageSmoothingEnabled = iconContext.mozImageSmoothingEnabled = iconContext.webkitImageSmoothingEnabled = true;
+        iconContext.imageSmoothingEnabled = iconContext.mozImageSmoothingEnabled = iconContext.webkitImageSmoothingEnabled = smooth;
 
         let cursorCanvasElement = document.createElement('canvas');
         cursorCanvasElement.width = defaultSize;
         cursorCanvasElement.height = defaultSize;
         let cursorContext = cursorCanvasElement.getContext('2d');
+        cursorContext.imageSmoothingEnabled = cursorContext.mozImageSmoothingEnabled = cursorContext.webkitImageSmoothingEnabled = smooth;
 
         let anchorX = 0;
         let anchorY = 0;
@@ -37,34 +37,41 @@ function getMarkerImage(car) {
         } else {
             await new Promise(async (resolve) => {
                 let label = getLabel(car.Name + ' ' + car.Plate);
-                let iconAdditionalMargin = 0;
-                iconAdditionalMargin = await drawIconWithBackground(iconCanvasElement, iconContext, car);
+                let iconParameters = await drawIconWithBackground(iconCanvasElement, iconContext, car);
                 let cursor = await drawCursorWithBackground(cursorCanvasElement, cursorContext, car);
-                let canvasWidth = Math.max(iconCanvasElement.width, cursorCanvasElement.width);
                 if (!label) {
                     label = Object();
                     label.width = label.height = 0;
                 }
+
+                let canvasWidth = Math.max(iconCanvasElement.width, cursorCanvasElement.width);
                 let canvasHeight = label.height + iconCanvasElement.height + cursorCanvasElement.height;
                 let iconMargin = 0;
+
                 let cursorMargin = (canvasWidth - cursorCanvasElement.width) / 2;
-                if (cursor) {
+                if (cursor.result) {
                     anchorX = cursorMargin + cursor.anchorX;
                     anchorY = label.height + iconCanvasElement.height + cursor.anchorY;
                 }
-                if (iconCanvasElement.width > 0)
-                    iconMargin = (anchorX) - iconCanvasElement.width / 2;
-                let canvasWidthWithLabel = iconMargin + label.width + iconAdditionalMargin + 1;
+                if (iconCanvasElement.width > 0 && cursor.result)
+                    iconMargin = round((anchorX - (iconCanvasElement.width / 2)), 0);
+                let canvasWidthWithLabel = iconMargin + label.width + iconParameters.margin + 1;
                 resultCanvasElement.width = Math.max(canvasWidthWithLabel, canvasWidth);
                 resultCanvasElement.height = canvasHeight;
+                let iconYMargin;
+                if (cursor.result) {
+                    iconYMargin = iconParameters.pipkaSize;
+                } else {
+                    iconYMargin = 0;
+                    anchorX = iconCanvasElement.width / 2;
+                    anchorY = resultCanvasElement.height;
+                }
 
-                let iconOffset = 0.35;
-
-                if (label.width != 0 && label.height != 0)
-                    context.drawImage(label, iconMargin + iconAdditionalMargin, iconCanvasElement.height * iconOffset);
-                if (iconCanvasElement.width != 0 && iconCanvasElement.height != 0)
-                    context.drawImage(iconCanvasElement, iconMargin, label.height + iconCanvasElement.height * iconOffset);
-                if (cursorCanvasElement.width != 0 && cursorCanvasElement.height != 0)
+                if (!canvasIsEmpty(label))
+                    context.drawImage(label, iconMargin + iconParameters.margin, iconYMargin);
+                if (!canvasIsEmpty(iconCanvasElement))
+                    context.drawImage(iconCanvasElement, iconMargin, label.height + iconYMargin);
+                if (!canvasIsEmpty(cursorCanvasElement))
                     context.drawImage(cursorCanvasElement, cursorMargin, label.height + iconCanvasElement.height);
                 resolve();
             });
@@ -85,11 +92,14 @@ function drawCursorWithBackground(canvasElement, context, car) {
     return new Promise(async (resolve) => {
         let anchorX = 0;
         let anchorY = 0;
+        let result = false;
         let backgroundCanvas = document.createElement('canvas');
         let ctxBackground = backgroundCanvas.getContext('2d');
+        ctxBackground.imageSmoothingEnabled = ctxBackground.mozImageSmoothingEnabled = ctxBackground.webkitImageSmoothingEnabled = smooth;
         let iconCanvas = document.createElement('canvas');
         backgroundCanvas.width = backgroundCanvas.height = iconCanvas.width = iconCanvas.height = 0;
         let ctxIcon = iconCanvas.getContext('2d');
+        ctxIcon.imageSmoothingEnabled = ctxIcon.mozImageSmoothingEnabled = ctxIcon.webkitImageSmoothingEnabled = smooth;
         if (flagIsSet(cursorIconSet) && parm.Settings['CursorBackgroundPath'] != none) {
             if (parm.Settings['CursorBackgroundPath'] == auto) {
                 let defaultCursor = await getDefaultArrowCursor(48, car);
@@ -105,6 +115,7 @@ function drawCursorWithBackground(canvasElement, context, car) {
                 backgroundCanvas = getRotatedCursor(image, car.Course);
             }
             ctxBackground.drawImage(backgroundCanvas, 0, 0);
+            result = true;
         }
         if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorIconPath'] != none) {
             let image;
@@ -118,21 +129,22 @@ function drawCursorWithBackground(canvasElement, context, car) {
                 iconCanvas.width = image.width;
                 iconCanvas.height = image.height;
                 ctxIcon.drawImage(image, 0, 0);
+                result = true;
             }
         }
-        drawBackgroundAndIcon(canvasElement, context, backgroundCanvas, iconCanvas);
+        drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas);
         if (anchorX == 0 && anchorY == 0) {
             anchorX = canvasElement.width / 2;
             anchorY = canvasElement.height / 2;
         }
-        resolve({anchorX: anchorX, anchorY: anchorY});
+        resolve({result: result, anchorX: anchorX, anchorY: anchorY});
     });
 }
 
-function drawBackgroundAndIcon(canvasElement, context, backgroundCanvas, iconCanvas, backgroundHeight) {
+function drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas, backgroundHeight) {
     canvasElement.width = Math.max(backgroundCanvas.width, iconCanvas.width);
     canvasElement.height = Math.max(backgroundCanvas.height, iconCanvas.height);
-    context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = false;
+    //context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = smooth;
     if (backgroundCanvas.width != 0 && backgroundCanvas.height != 0) {
         context.drawImage(backgroundCanvas, (canvasElement.width - backgroundCanvas.width) / 2, (canvasElement.height - backgroundCanvas.height) / 2);
     }
@@ -153,13 +165,14 @@ function drawIconWithBackground(canvasElement, context, car) {
         let backgroundCanvas = document.createElement('canvas');
         backgroundCanvas.width = backgroundCanvas.height = 0;
         let ctxBackground = backgroundCanvas.getContext('2d');
+        //ctxBackground.imageSmoothingEnabled = ctxBackground.mozImageSmoothingEnabled = ctxBackground.webkitImageSmoothingEnabled = smooth;
         let iconCanvas = document.createElement('canvas');
-        iconCanvas.width = iconCanvas.height = backgroundCanvas.width = backgroundCanvas.height = 0;
+        iconCanvas.width = iconCanvas.height = 0;
         let ctxIcon = iconCanvas.getContext('2d');
-        ctxIcon.imageSmoothingEnabled = ctxIcon.mozImageSmoothingEnabled = ctxIcon.webkitImageSmoothingEnabled = false;
+        //ctxIcon.imageSmoothingEnabled = ctxIcon.mozImageSmoothingEnabled = ctxIcon.webkitImageSmoothingEnabled = smooth;
         let iconMargin = 0;
+        let pipkaSize = 0;
         let width = undefined;
-        let defaultWidth = 128;
         if (flagIsSet(iconBackgroundSet) && parm.Settings['IconBackgroundPath'] != none) {
             let image;
             let result;
@@ -168,6 +181,7 @@ function drawIconWithBackground(canvasElement, context, car) {
                 image = result.image;
                 iconMargin = result.margin;
                 width = result.width;
+                pipkaSize = result.pipkaSize;
             } else {
                 image = await getImage(parm.Urls.Content + parm.Settings['IconBackgroundPath']);
             }
@@ -180,9 +194,9 @@ function drawIconWithBackground(canvasElement, context, car) {
             let image;
             if (parm.Settings['IconPath'] == auto) {
                 if (width)
-                    image = await getIcon(width, car.IconPath);
+                    image = await getIconWithResize(width, car.IconPath);
                 else {
-                    image = await getIcon(defaultWidth, car.IconPath);
+                    image = await getImage(car.IconPath);
                 }
             } else {
                 image = await getImage(parm.Urls.Content + parm.Settings['IconPath']);
@@ -191,8 +205,8 @@ function drawIconWithBackground(canvasElement, context, car) {
             iconCanvas.height = image.height;
             ctxIcon.drawImage(image, 0, 0);
         }
-        drawBackgroundAndIcon(canvasElement, context, backgroundCanvas, iconCanvas, width);
-        resolve(iconMargin);
+        drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas, width);
+        resolve({margin: iconMargin, pipkaSize: pipkaSize});
     });
 }
 
@@ -213,9 +227,9 @@ function getLabel(alias) {
 
         // --- Label: calc size
         let canvasLabel = document.createElement('canvas');
-        canvasLabel.style['margin-bottom'] = labelMargin + "px; image-rendering: pixelated;";
+        canvasLabel.style['margin-bottom'] = labelMargin + "px;";
         let ctxLabel = canvasLabel.getContext('2d');
-        ctxLabel.imageSmoothingEnabled = ctxLabel.mozImageSmoothingEnabled = ctxLabel.webkitImageSmoothingEnabled = false;
+        ctxLabel.imageSmoothingEnabled = ctxLabel.mozImageSmoothingEnabled = ctxLabel.webkitImageSmoothingEnabled = smooth;
         ctxLabel.font = labelFont;
         labelWidth = ctxLabel.measureText(alias).width;
         labelWidth += xStart + labelPadding * 2;
@@ -246,6 +260,8 @@ function getRotatedCursor(image, angle) {
     let offsetWidth = cursorCanvasElement.width / 2;
     let offsetHeight = cursorCanvasElement.height / 2;
     let cursorContext = cursorCanvasElement.getContext('2d');
+    cursorContext.imageSmoothingEnabled = cursorContext.mozImageSmoothingEnabled = cursorContext.webkitImageSmoothingEnabled = smooth;
+
     cursorContext.translate(offsetWidth, offsetHeight);
     cursorContext.rotate(calculateRadian(angle));
     cursorContext.drawImage(image, -offsetWidth, -offsetHeight, cursorCanvasElement.width, cursorCanvasElement.height);
@@ -261,7 +277,6 @@ function flagIsSet(flag) {
 function drawBorder(ctx, width, height, roundSize, pipkaSize) {
     let PI2 = Math.PI * 2,
         icSizeMPSize = width - pipkaSize;
-
     ctx.moveTo(roundSize, 0);
     ctx.lineTo(width - roundSize, 0); // horz
     ctx.arc(width - roundSize, roundSize, roundSize, -PI2 / 4, 0); // right top corner
@@ -278,18 +293,18 @@ function drawBorder(ctx, width, height, roundSize, pipkaSize) {
     ctx.arc(roundSize, roundSize, roundSize, PI2 / 2, -PI2 / 4); // left top corner
 }
 
-function getIcon(width, iconPath) {
+function getIconWithResize(width, iconPath) {
     return new Promise((resolve) => {
         let canvas = document.createElement('canvas');
         let context = canvas.getContext('2d');
+        context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = smooth;
         getImage(iconPath).then(function (image) {
-            context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = false;
             let multiplier = 1;
             if (image.width > width || image.height > width) {
                 multiplier = image.width > image.height ? width / image.width : width / image.height;
             }
-            canvas.width = image.width * multiplier;
-            canvas.height = image.height * multiplier;
+            canvas.width = round(image.width * multiplier, 0);
+            canvas.height = round(image.height * multiplier, 0);
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
             resolve(canvas);
         });
@@ -302,7 +317,7 @@ function getDefaultIconBackground() {
             boubleWidth = carImageSize + 6,
             boubleHeight = boubleWidth * 1.5,
             boubleRoundSize = 4,
-            boubleArrowSize = carImageSize / 2.5,
+            boubleArrowSize = round(carImageSize / 2.5, 0),
             boubleBg = "rgba(255,255,255,.75)",
             borderColor = "#cccccc",
             borderWidth = 1;
@@ -321,15 +336,17 @@ function getDefaultIconBackground() {
         context.fillStyle = boubleBg;
         drawBorder(context, size, size, boubleRoundSize, boubleArrowSize);
         context.fill();
-        //drawBorder(context, size, size, boubleRoundSize, boubleArrowSize);
         context.stroke();
+
         let resultCanvas = document.createElement('canvas');
         resultCanvas.width = Math.max(48, canvas.width);
         resultCanvas.height = Math.max(48, canvas.height);
-        let margin = (resultCanvas.width - size) / 2;
         let resultCtx = resultCanvas.getContext('2d');
+
+        let margin = (resultCanvas.width - size) / 2;
+        resultCtx.imageSmoothingEnabled = resultCtx.mozImageSmoothingEnabled = resultCtx.webkitImageSmoothingEnabled = smooth;
         resultCtx.drawImage(canvas, margin, 0);
-        resolve({image: resultCanvas, width: boubleWidth, margin: margin});
+        resolve({image: resultCanvas, width: boubleWidth, margin: margin, pipkaSize: size / 2});
     });
 }
 
@@ -413,6 +430,7 @@ function getDefaultArrowCursor(sideSize, car) {
         canvasElement.width = carArrowSizeMax;
         canvasElement.height = sideSize;
         let ctxArrow = canvasElement.getContext('2d');
+        ctxArrow.imageSmoothingEnabled = ctxArrow.mozImageSmoothingEnabled = ctxArrow.webkitImageSmoothingEnabled = smooth;
         let x = sideSize / 2,
             y = sideSize / 2;
 
@@ -500,4 +518,10 @@ function getColorFromImageLink(link) {
         }
     }
     return defaultColor;
+}
+
+function canvasIsEmpty(canvas) {
+    if (canvas.width == 0 && canvas.height == 0)
+        return true;
+    return false;
 }
