@@ -37,42 +37,55 @@ function getMarkerImage(car) {
         } else {
             await new Promise(async (resolve) => {
                 let label = getLabel(car.Name + ' ' + car.Plate);
-                let iconParameters = await drawIconWithBackground(iconCanvasElement, iconContext, car);
-                let cursor = await drawCursorWithBackground(cursorCanvasElement, cursorContext, car);
+                let iconParameters = await getAndDrawIconWithBackground(iconCanvasElement, iconContext, car);
+                let cursor = await getAndDrawCursorWithBackground(cursorCanvasElement, cursorContext, car);
                 if (!label) {
                     label = Object();
                     label.width = label.height = 0;
                 }
+                let canvasWidth = 0;
+                let canvasHeight = 0;
+                canvasWidth = Math.max(iconCanvasElement.width, cursorCanvasElement.width);
+                canvasHeight = label.height + iconCanvasElement.height + cursorCanvasElement.height;
 
-                let canvasWidth = Math.max(iconCanvasElement.width, cursorCanvasElement.width);
-                let canvasHeight = label.height + iconCanvasElement.height + cursorCanvasElement.height;
-                let iconMargin = 0;
+                let iconMarginX = 0;
+                let cursorMarginX = 0;
 
-                let cursorMargin = (canvasWidth - cursorCanvasElement.width) / 2;
                 if (cursor.result) {
-                    anchorX = cursorMargin + cursor.anchorX;
+                    cursorMarginX = round((canvasWidth / 2) - cursor.anchorX, 0);
+                    anchorX = cursorMarginX + cursor.anchorX;
                     anchorY = label.height + iconCanvasElement.height + cursor.anchorY;
                 }
                 if (iconCanvasElement.width > 0 && cursor.result)
-                    iconMargin = round((anchorX - (iconCanvasElement.width / 2)), 0);
-                let canvasWidthWithLabel = iconMargin + label.width + iconParameters.margin + 1;
+                    if (iconCanvasElement.width < cursorCanvasElement.width)
+                        iconMarginX = round((anchorX - (iconCanvasElement.width / 2)), 0);
+                    else
+                        console.log("");
+
+                let canvasWidthWithLabel = iconMarginX + label.width + iconParameters.margin + 1;
                 resultCanvasElement.width = Math.max(canvasWidthWithLabel, canvasWidth);
                 resultCanvasElement.height = canvasHeight;
-                let iconYMargin;
-                if (cursor.result) {
-                    iconYMargin = iconParameters.pipkaSize;
-                } else {
-                    iconYMargin = 0;
+
+                if (!cursor.result) {
                     anchorX = iconCanvasElement.width / 2;
                     anchorY = resultCanvasElement.height;
                 }
-
+                let labelMarginX = 0;
+                let labelMarginY = 0;
+                if (iconCanvasElement.height > 0) {
+                    labelMarginX = iconMarginX;
+                    labelMarginY = anchorY - iconCanvasElement.height - label.height;
+                }
+                else {
+                    labelMarginX = cursorMarginX;
+                    labelMarginY = iconCanvasElement.height;
+                }
                 if (!canvasIsEmpty(label))
-                    context.drawImage(label, iconMargin + iconParameters.margin, iconYMargin);
+                    context.drawImage(label, labelMarginX, labelMarginY);
                 if (!canvasIsEmpty(iconCanvasElement))
-                    context.drawImage(iconCanvasElement, iconMargin, label.height + iconYMargin);
+                    context.drawImage(iconCanvasElement, iconMarginX, anchorY - iconCanvasElement.height);
                 if (!canvasIsEmpty(cursorCanvasElement))
-                    context.drawImage(cursorCanvasElement, cursorMargin, label.height + iconCanvasElement.height);
+                    context.drawImage(cursorCanvasElement, cursorMarginX, label.height + iconCanvasElement.height);
                 resolve();
             });
         }
@@ -88,7 +101,7 @@ function drawDefaultCursor(canvasElement, context, car) {
     });
 }
 
-function drawCursorWithBackground(canvasElement, context, car) {
+function getAndDrawCursorWithBackground(canvasElement, context, car) {
     return new Promise(async (resolve) => {
         let anchorX = 0;
         let anchorY = 0;
@@ -119,11 +132,12 @@ function drawCursorWithBackground(canvasElement, context, car) {
         }
         if (flagIsSet(cursorBackgroundSet) && parm.Settings['CursorIconPath'] != none) {
             let image;
-            if (parm.Settings['CursorIconPath'] !== auto) {
-                image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
-            } else {
-                if (parm.Settings['CursorBackgroundPath'] != auto)
+            if (parm.Settings['CursorBackgroundPath'] != auto) {
+                if (parm.Settings['CursorIconPath'] !== auto) {
+                    image = await getImage(parm.Urls.Content + parm.Settings['CursorIconPath']);
+                } else {
                     image = await getImage(car.IconPath);
+                }
             }
             if (image) {
                 iconCanvas.width = image.width;
@@ -132,7 +146,7 @@ function drawCursorWithBackground(canvasElement, context, car) {
                 result = true;
             }
         }
-        drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas);
+        drawCursorAndBackground(canvasElement, context, backgroundCanvas, iconCanvas);
         if (anchorX == 0 && anchorY == 0) {
             anchorX = canvasElement.width / 2;
             anchorY = canvasElement.height / 2;
@@ -141,7 +155,18 @@ function drawCursorWithBackground(canvasElement, context, car) {
     });
 }
 
-function drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas, backgroundHeight) {
+function drawIconAndBackground(canvasElement, context, backgroundCanvas, iconCanvas) {
+    canvasElement.width = Math.max(backgroundCanvas.width, iconCanvas.width);
+    canvasElement.height = Math.max(backgroundCanvas.height, iconCanvas.height);
+    if (!canvasIsEmpty(backgroundCanvas)) {
+        context.drawImage(backgroundCanvas, (canvasElement.width - backgroundCanvas.width) / 2, (canvasElement.height - backgroundCanvas.height) / 2);
+    }
+    if (!canvasIsEmpty(iconCanvas)) {
+        context.drawImage(iconCanvas, (canvasElement.width - iconCanvas.width) / 2, 0);
+    }
+}
+
+function drawCursorAndBackground(canvasElement, context, backgroundCanvas, iconCanvas, backgroundHeight) {
     canvasElement.width = Math.max(backgroundCanvas.width, iconCanvas.width);
     canvasElement.height = Math.max(backgroundCanvas.height, iconCanvas.height);
     //context.imageSmoothingEnabled = context.mozImageSmoothingEnabled = context.webkitImageSmoothingEnabled = smooth;
@@ -160,16 +185,14 @@ function drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, ic
     }
 }
 
-function drawIconWithBackground(canvasElement, context, car) {
+function getAndDrawIconWithBackground(canvasElement, context, car) {
     return new Promise(async (resolve) => {
         let backgroundCanvas = document.createElement('canvas');
         backgroundCanvas.width = backgroundCanvas.height = 0;
         let ctxBackground = backgroundCanvas.getContext('2d');
-        //ctxBackground.imageSmoothingEnabled = ctxBackground.mozImageSmoothingEnabled = ctxBackground.webkitImageSmoothingEnabled = smooth;
         let iconCanvas = document.createElement('canvas');
         iconCanvas.width = iconCanvas.height = 0;
         let ctxIcon = iconCanvas.getContext('2d');
-        //ctxIcon.imageSmoothingEnabled = ctxIcon.mozImageSmoothingEnabled = ctxIcon.webkitImageSmoothingEnabled = smooth;
         let iconMargin = 0;
         let pipkaSize = 0;
         let width = undefined;
@@ -205,7 +228,7 @@ function drawIconWithBackground(canvasElement, context, car) {
             iconCanvas.height = image.height;
             ctxIcon.drawImage(image, 0, 0);
         }
-        drawBackgroundAndIconImage(canvasElement, context, backgroundCanvas, iconCanvas, width);
+        drawIconAndBackground(canvasElement, context, backgroundCanvas, iconCanvas, width);
         resolve({margin: iconMargin, pipkaSize: pipkaSize});
     });
 }
