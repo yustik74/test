@@ -36,7 +36,8 @@ function getMarkerImage(car) {
             anchorY = anchor[1];
         } else {
             await new Promise(async (resolve) => {
-                let label = getLabel(car.Name + ' ' + car.Plate);
+                //let label = getLabel(car.Name + ' ' + car.Plate);
+                let label = getLabel(car.Name);
                 let iconParameters = await getAndDrawIconWithBackground(iconCanvasElement, iconContext, car);
                 let cursor = await getAndDrawCursorWithBackground(cursorCanvasElement, cursorContext, car);
                 if (!label) {
@@ -73,7 +74,7 @@ function getMarkerImage(car) {
                 let labelMarginX = 0;
                 let labelMarginY = 0;
                 if (iconCanvasElement.height > 0) {
-                    labelMarginX = iconMarginX;
+                    labelMarginX = iconMarginX + 6;
                     labelMarginY = anchorY - iconCanvasElement.height - label.height;
                 }
                 else {
