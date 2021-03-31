@@ -333,19 +333,25 @@
                         && !!a[1]._LastCoords
                         && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout
                     ).map(item => {
-                            let deviceInfo = allDevicesWithPlates.find(b => b.ID == item[0]);
+                            let deviceInfo = allDevices.Items.find(b => b.ID == item[0]);
                             let plateNumber;
                             if (item[1].Final.AppCityServiceVisible == false)
                                 return null;
                             let imageName = "sedan.png";
                             let color = 'FF0000';
                             if (deviceInfo) {
-                                plateNumber = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber").Value;
+                                if (deviceInfo.Properties) {
+                                    let vehNumberProperty = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber");
+                                    if (vehNumberProperty)
+                                        plateNumber = vehNumberProperty.Value;
+                                }
                                 if (deviceInfo.ImageColored) {
-                                    {
                                         imageName = deviceInfo.ImageColored;
                                         color = imageName.slice(imageName.length - 6, imageName.length);
-                                    }
+                                }
+                                else
+                                {
+                                    imageName = deviceInfo.Image;
                                 }
                             } else
                                 plateNumber = "";
