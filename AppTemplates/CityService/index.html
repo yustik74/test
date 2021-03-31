@@ -73,7 +73,7 @@
             </div>
             <div id="allTrucks" class="col-xs-3 semi-white">
             </div>
-            <div class="col-xs-12 progressDiv">
+            <div class="col-xs-12 progressDiv totalStatsDiv">
                 <div id="totalProgress"
                      data-role="progressbar"
                      data-min="0"
@@ -86,7 +86,7 @@
             </div>
             <div id="allTrucksOnline" class="col-xs-3 semi-white">
             </div>
-            <div class="col-xs-12 progressDiv">
+            <div class="col-xs-12 progressDiv onlineStatsDiv">
                 <div id="onlineProgress"
                      data-role="progressbar"
                      data-min="0"
@@ -101,7 +101,7 @@
     const parm = window['external-settings'];
     let defaultView = parm.Settings['DefaultCoordinates'];
     let cursorPath = parm.Urls.Content + "/img/arrow.png";
-
+    const debug = true;
     let mapObject = InitMap('map', parm.Settings['ClusterSize'], defaultView);
     let bounds = [];
 
@@ -277,7 +277,6 @@
                         Speed: device.Speed,
                         Plate: device.Plate,
                         LastTime: device.LastTime,
-                        Color: device.Color,
                         IconPath: device.IconPath,
                     };
 
@@ -327,52 +326,65 @@
             $.get({
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
+                    let removedCount = 0;
+                    let debugInfo = "";
                     let online = Object.entries(onlineInfoAll).filter(a => !!a
                         && !!a[1]
                         && !!a[1].LastPosition
                         && !!a[1]._LastCoords
                         && getTimeDifferenceInSeconds(a[1]._LastData) / 60 < outdatedTimeout
                     ).map(item => {
-                            let deviceInfo = allDevices.Items.find(b => b.ID == item[0]);
-                            let plateNumber;
-                            if (item[1].Final.AppCityServiceVisible == false)
-                                return null;
-                            let imageName = "sedan.png";
-                            let color = 'FF0000';
-                            if (deviceInfo) {
-                                if (deviceInfo.Properties) {
-                                    let vehNumberProperty = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber");
-                                    if (vehNumberProperty)
-                                        plateNumber = vehNumberProperty.Value;
-                                }
-                                if (deviceInfo.ImageColored) {
-                                        imageName = deviceInfo.ImageColored;
-                                        color = imageName.slice(imageName.length - 6, imageName.length);
-                                }
-                                else
-                                {
-                                    imageName = deviceInfo.Image;
-                                }
-                            } else
-                                plateNumber = "";
-                            return {
-                                LastPosition: item[1].LastPosition,
-                                Color: color,
-                                Name: item[1].Name,
-                                Course: item[1].Course,
-                                Speed: item[1].Speed,
-                                DeviceInfo: allDevices.Items.find(a => a.ID == item[0]),
-                                ID: item[0],
-                                Plate: plateNumber,
-                                LastTime: item[1]._LastData,
-                                IconPath: parm.Urls.ImageCar + "/" + imageName,
-                            }
+                            let newItem = convertDevice(item);
+                            if (newItem)
+                                return newItem;
+                            else
+                                removedCount++;
                         }
                     );
-                    resolve(online.filter(a => !!a));
+                    let totalOnMap = online.filter(a => !!a);
+                    debugInfo += "Total cars online: " + Object.entries(onlineInfoAll).length + '\r\n';
+                    debugInfo += "Total cars on map: " + totalOnMap.length + '\r\n';
+                    debugInfo += "Removed with geofences: " + removedCount + '\r\n';
+                    debugInfo += "OnlineInfoAll: \r\n" + JSON.stringify(onlineInfoAll) + '\r\n';
+                    debugInfo += "Online: \r\n" + JSON.stringify(totalOnMap) + '\r\n';
+                    if (debug)
+                        download('onlinedevices-debug.txt', debugInfo);
+                    resolve(totalOnMap);
                 }
             });
         });
+    }
+
+    function convertDevice(item) {
+        if (item[1].Final.AppCityServiceVisible == false)
+            return null;
+        let deviceInfo = allDevices.Items.find(b => b.ID == item[0]);
+        let plateNumber;
+
+        let imageName = "sedan.png";
+        if (deviceInfo) {
+            if (deviceInfo.Properties) {
+                let vehNumberProperty = deviceInfo.Properties.find(a => a.Name == "VehicleRegNumber");
+                if (vehNumberProperty)
+                    plateNumber = vehNumberProperty.Value;
+            }
+            if (deviceInfo.ImageColored) {
+                imageName = deviceInfo.ImageColored;
+            } else {
+                imageName = deviceInfo.Image;
+            }
+        } else
+            plateNumber = "";
+        return {
+            LastPosition: item[1].LastPosition,
+            Name: item[1].Name,
+            Course: item[1].Course,
+            Speed: item[1].Speed,
+            ID: item[0],
+            Plate: plateNumber,
+            LastTime: item[1]._LastData,
+            IconPath: parm.Urls.ImageCar + "/" + imageName,
+        }
     }
 
     function getStateName(speed) {
@@ -444,6 +456,19 @@
             else
                 element.removeAttribute('hidden');
         }
+    }
+
+    function download(filename, text) {
+        let element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
     }
 </script>
 </body>
