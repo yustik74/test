@@ -11,7 +11,7 @@ html, body, #map {
 
 canvas {
     font-smooth: never;
-    -webkit-font-smoothing : none;
+    -webkit-font-smoothing: none;
 }
 
 .controlWrapper .container .logoDiv {
@@ -19,14 +19,25 @@ canvas {
     width: 100%;
 }
 
-#carsstats {
-    margin-top: 10px;
-}
-
 #progressDiv {
     padding: 0;
     background-color: rgba(255, 255, 255, .3);
-    width: 100%
+    width: 100%;
+}
+
+.totalStatsDiv .k-progressbar .k-state-selected {
+    background-color: #30abdc;
+    border-color: #1c97c8;
+}
+
+.onlineStatsDiv .k-progressbar .k-state-selected {
+    background-color: #fecb00;
+    border-color: #eab700;
+}
+
+.k-progress-status {
+    font-weight: bold;
+    color: #303030;
 }
 
 .controlWrapper {
@@ -66,8 +77,10 @@ canvas {
     height: auto;
 }
 
-.orgs {
-    padding-bottom: 10px;
+#orgs {
+    //padding-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 #logo {
@@ -78,8 +91,15 @@ canvas {
 }
 
 #statistics {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.orgDropdown, .statsDiv {
+    width: 100%;
     padding-top: 10px;
 }
+
 @media screen and (max-width: 1024px) {
     .controlWrapper {
         position: fixed;
@@ -92,33 +112,44 @@ canvas {
         font-size: 70%;
         margin-top: 0;
     }
+
+    .col-xs-12 {
+        font-size: 200%;
+    }
+
+    .statsDiv {
+        width: 50%;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-bottom: 3px;
+    }
 }
 
-@media screen and (max-width: 1024px) and (orientation: landscape){
+@media screen and (max-width: 1024px) and (orientation: landscape) {
     #logo {
-        width: 10%;
+        width: 30%;
     }
 
     .controlWrapper {
         position: fixed;
-        width: 100%;
+        width: 25%;
         top: 0px;
         left: 0px;
-        right: 0px;
+        bottom: 0px;
+
         border-radius: 0;
-        font-size: 40%;
+        font-size: 100%;
         margin-top: 0;
-        margin-bottom: 0;
     }
 
     .k-dropdown, .k-dropdowntree {
-        height: 20px;
+        height: 30px;
         margin-bottom: 2px;
         font-size: 140%;
     }
 
     .k-progressbar-horizontal {
-        height: 10px;
+        height: 20px;
         width: 100%;
         background-color: #ccc;
     }
@@ -129,6 +160,10 @@ canvas {
         height: 15px;
     }
 
+    .col-xs-12 {
+        font-size: 140%;
+    }
+
     .container {
         padding-right: 15px;
         padding-left: 15px;
@@ -137,14 +172,14 @@ canvas {
         height: auto;
     }
 
-    #statistics {
-        padding-top: 5px;
-    }
-
     #carsstats {
-        margin-top: 5px;
+        margin-top: 0px;
     }
 
+    .orgDropdown, .statsDiv  {
+        width: 100%;
+        padding-bottom: 5px;
+    }
 }
 
 .semi-white {

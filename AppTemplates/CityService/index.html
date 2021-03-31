@@ -41,58 +41,60 @@
         <div id="logoDiv" hidden="true">
             <img id="logo" src="">
         </div>
-        <div id="orgs" style="padding-top: 10px">
-            <div id="mainGroups">
+        <div id="orgs">
+            <div id="mainGroups" class="orgDropdown">
                 <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
                     <input data-role="dropdownlist"
                            data-auto-bind="false"
                            data-value-primitive="true"
                            data-text-field="Name" data-value-field="ID"
-                           data-bind="
-                                                value:ID,
+                           data-bind="          value:ID,
                                                 source:Groups,
                                                 events: {change: onChange}"/>
                     </span>
             </div>
-            <div id="childrenGroups">
-        <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
-            <input data-role="dropdownlist"
-                   data-auto-bind="false"
-                   data-value-primitive="true"
-                   data-text-field="Name" data-value-field="ID"
-                   data-bind="
-                                        value:ID,
+            <div id="childrenGroups" class="orgDropdown">
+                <span title class="k-widget k-dropdown" role="listbox" style="width: 100%">
+                    <input data-role="dropdownlist"
+                           data-auto-bind="false"
+                           data-value-primitive="true"
+                           data-text-field="Name" data-value-field="ID"
+                           data-bind="      value:ID,
                                         source:Groups,
                                         events: {change: onChange}"/>
             </span>
             </div>
         </div>
-        <div class="stats" id="statistics">
-            <div class="col-xs-12 semi-white">Всего машин
-                <hr>
-            </div>
-            <div id="allTrucks" class="col-xs-3 semi-white">
-            </div>
-            <div class="col-xs-12 progressDiv totalStatsDiv">
-                <div id="totalProgress"
-                     data-role="progressbar"
-                     data-min="0"
-                     data-bind="enabled: isEnabled,
+        <div id="statistics">
+            <div class="statsDiv">
+                <div class="col-xs-12 semi-white">Всего машин
+                    <hr>
+                </div>
+                <div id="allTrucks" class="col-xs-3 semi-white">
+                </div>
+                <div class="col-xs-12 progressDiv totalStatsDiv">
+                    <div id="totalProgress"
+                         data-role="progressbar"
+                         data-min="0"
+                         data-bind="enabled: isEnabled,
                             value: totalCarsInGroup"
-                ></div>
+                    ></div>
+                </div>
             </div>
-            <div class="col-xs-12 semi-white" id="carsstats">Машин на линии
-                <hr>
-            </div>
-            <div id="allTrucksOnline" class="col-xs-3 semi-white">
-            </div>
-            <div class="col-xs-12 progressDiv onlineStatsDiv">
-                <div id="onlineProgress"
-                     data-role="progressbar"
-                     data-min="0"
-                     data-bind="enabled: isEnabled,
+            <div class="statsDiv">
+                <div class="col-xs-12 semi-white" id="carsstats">Машин на линии
+                    <hr>
+                </div>
+                <div id="allTrucksOnline" class="col-xs-3 semi-white">
+                </div>
+                <div class="col-xs-12 progressDiv onlineStatsDiv">
+                    <div id="onlineProgress"
+                         data-role="progressbar"
+                         data-min="0"
+                         data-bind="enabled: isEnabled,
                             value: carsInGroupOnline"
-                ></div>
+                    ></div>
+                </div>
             </div>
         </div>
     </div>
@@ -101,7 +103,7 @@
     const parm = window['external-settings'];
     let defaultView = parm.Settings['DefaultCoordinates'];
     let cursorPath = parm.Urls.Content + "/img/arrow.png";
-    const debug = true;
+    const debug = false;
     let mapObject = InitMap('map', parm.Settings['ClusterSize'], defaultView);
     let bounds = [];
 
@@ -452,9 +454,9 @@
         let element = document.getElementById(id);
         if (element) {
             if (state)
-                element.setAttribute('hidden', state)
-            else
-                element.removeAttribute('hidden');
+                element.setAttribute('style', 'display: none;')
+            //else
+              //  element.removeAttribute('style');
         }
     }
 
