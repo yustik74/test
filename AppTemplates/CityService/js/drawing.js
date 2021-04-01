@@ -74,7 +74,7 @@ function getMarkerImage(car) {
                 let labelMarginX = 0;
                 let labelMarginY = 0;
                 if (iconCanvasElement.height > 0) {
-                    labelMarginX = iconMarginX + 6;
+                    labelMarginX = iconMarginX + iconParameters.margin;
                     labelMarginY = anchorY - iconCanvasElement.height - label.height;
                 }
                 else {

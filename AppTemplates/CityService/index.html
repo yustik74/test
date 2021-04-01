@@ -329,7 +329,6 @@
                 url: parm.Urls.Service + '/GetOnlineInfoAll?session=' + parm.Token + "&schemaID=" + parm.Organization.UID,
                 success: function (onlineInfoAll) {
                     let removedCount = 0;
-                    let debugInfo = "";
                     let online = Object.entries(onlineInfoAll).filter(a => !!a
                         && !!a[1]
                         && !!a[1].LastPosition
@@ -344,13 +343,16 @@
                         }
                     );
                     let totalOnMap = online.filter(a => !!a);
-                    debugInfo += "Total cars online: " + Object.entries(onlineInfoAll).length + '\r\n';
-                    debugInfo += "Total cars on map: " + totalOnMap.length + '\r\n';
-                    debugInfo += "Removed with geofences: " + removedCount + '\r\n';
-                    debugInfo += "OnlineInfoAll: \r\n" + JSON.stringify(onlineInfoAll) + '\r\n';
-                    debugInfo += "Online: \r\n" + JSON.stringify(totalOnMap) + '\r\n';
-                    if (debug)
+                    if (debug) {
+                        let debugInfo = "";
+                        debugInfo += "Total cars online: " + Object.entries(onlineInfoAll).length + '\r\n';
+                        debugInfo += "Total cars on map: " + totalOnMap.length + '\r\n';
+                        debugInfo += "Removed with geofences: " + removedCount + '\r\n';
+                        debugInfo += "OnlineInfoAll: \r\n" + JSON.stringify(onlineInfoAll) + '\r\n';
+                        debugInfo += "Online: \r\n" + JSON.stringify(totalOnMap) + '\r\n';
+
                         download('onlinedevices-debug.txt', debugInfo);
+                    }
                     resolve(totalOnMap);
                 }
             });
